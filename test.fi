@@ -1,0 +1,50 @@
+#fibonacci
+fn fib(n : (n == 0)) = 0;
+fn fib(n : (n == 1)) = 1;
+fn fib(n) = fib(n - 1) + fib(n - 2);
+
+#you can return function and specify needed type by parameter
+fn pow(e = 2){
+    fn f(n : Number) = {
+    	return n ^ exponent;
+    }
+    
+    return f;
+}
+
+#logical expression in function parameters
+fn divide(a, Number b : (b != 0)){
+    return a / b;
+}
+
+
+#structure definition
+struct Point{
+    var x;
+    var y;
+
+    fn init(Number x, Number y){
+        self.x = x;
+        self.y = y;
+    }
+
+    fn stringify(){
+        print "x = " + self.x + ", y = " + self.y;
+    }
+}
+
+fn main(){
+    var x = 10;
+    print fib(x); #55
+    
+    var square = pow();
+    print square(5); #25
+    
+    print divide(4,2); #2
+    
+    print divide(4,0); #Error, no function divide(a,0) is defined
+
+    var p = Point(1,2);
+    print p.stringify(); #x = 1, y = 2
+}
+
