@@ -1,7 +1,3 @@
-//
-// Created by michele on 02/04/23.
-//
-
 #ifndef FILANG_MEMORY_H
 #define FILANG_MEMORY_H
 

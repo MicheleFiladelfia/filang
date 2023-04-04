@@ -1,7 +1,3 @@
-//
-// Created by michele on 04/04/23.
-//
-
 #include "chunk.h"
 
 #ifndef FILANG_COMPILER_H

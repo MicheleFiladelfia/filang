@@ -1,7 +1,3 @@
-//
-// Created by michele on 01/04/23.
-//
-
 #ifndef FILANG_CHUNK_H
 #define FILANG_CHUNK_H
 #include <stdint.h>
