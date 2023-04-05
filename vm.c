@@ -2,6 +2,7 @@
 #include "vm.h"
 #include "scanner.h"
 #include "chunk.h"
+#include "compiler.h"
 
 
 VM vm;
@@ -71,6 +72,7 @@ InterpretResult execute(){
                 BINARY_NUMBER_OPERATION(NUMBER_CAST,*); break;
             case OP_PRINT:
                 printValue(pop());
+                printf("\n");
                 break;
             case OP_GREATER:
                 BINARY_NUMBER_OPERATION(BOOL_CAST,>); break;
@@ -104,23 +106,13 @@ InterpretResult execute(){
 InterpretResult interpret(const char* source){
     Chunk chunk;
     initChunk(&chunk);
-    //compile(source, &chunk);
 
-    //initScanner(source);
+    if(!compile(&chunk,source)){
+        freeChunk(&chunk);
+        return COMPILE_ERROR;
+    }
 
-    //debug fake compilation
-    int constant = writeConstant(&chunk, NUMBER_CAST(1.2));
-    writeChunk(&chunk, OP_CONSTANT, 123);
-    writeChunk(&chunk, constant, 123);
-
-    constant = writeConstant(&chunk, NUMBER_CAST(0));
-    writeChunk(&chunk, OP_CONSTANT, 123);
-    writeChunk(&chunk, constant, 123);
-
-    writeChunk(&chunk, OP_DIVIDE, 123);
-
-    writeChunk(&chunk, OP_PRINT, 123);
-    writeChunk(&chunk, OP_RETURN, 123);
+    writeChunk(&chunk,OP_PRINT,1);
 
     vm.chunk = &chunk;
     vm.ip = vm.chunk->code;

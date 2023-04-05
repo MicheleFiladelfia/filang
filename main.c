@@ -43,13 +43,10 @@ static void repl(){
             break;
         }
 
-        initScanner(line);
+        if(strcmp(line, "\n") == 0) continue;
+
+
         interpret(line);
-        printf("\n");
-        /*Token curr;
-        while((curr = scanToken()).type != TOKEN_EOF){
-            printf("%d %d\n", curr.line, curr.type);
-        }*/
     }
 }
 
@@ -59,10 +56,7 @@ static void runFile(char* fileName) {
 
     initScanner(sourceCode);
 
-    /*Token curr;
-    while((curr = scanToken()).type != TOKEN_EOF){
-        printf("%d %d\n", curr.line, curr.type);
-    }*/
+    interpret(sourceCode);
 }
 
 
@@ -78,5 +72,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    freeVM();
     return 0;
 }
