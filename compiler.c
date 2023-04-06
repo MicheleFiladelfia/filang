@@ -46,7 +46,7 @@ static void error(Token *token, const char* message){
     if(token->type == TOKEN_EOF){
         fprintf(stderr, " at end");
     } else if(token->type == TOKEN_ERROR){
-        //skip
+        fprintf(stderr, ", unexpected token");
     } else {
         fprintf(stderr, " at '%.*s'", token->length, token->start);
     }
