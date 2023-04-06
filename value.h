@@ -5,24 +5,24 @@
 #include "token.h"
 #include <stdbool.h>
 
-typedef enum{
+typedef enum {
     VAL_BOOL,
     VAL_NUMBER,
     VAL_NIL
 } ValueType;
 
-typedef struct{
+typedef struct {
     ValueType type;
-    union{
+    union {
         bool boolean;
         double number;
     } as;
 } Value;
 
-typedef struct{
+typedef struct {
     int count;
     int capacity;
-    Value* values;
+    Value *values;
 } ValueArray;
 
 
@@ -34,8 +34,11 @@ typedef struct{
 #define NIL ((Value){VAL_NIL, {.number = 0}})
 
 void printValue(Value value);
-void writeValueArray(ValueArray* array, Value value);
-void initValueArray(ValueArray* array);
-void freeValueArray(ValueArray* array);
+
+void writeValueArray(ValueArray *array, Value value);
+
+void initValueArray(ValueArray *array);
+
+void freeValueArray(ValueArray *array);
 
 #endif //FILANG_VALUE_H

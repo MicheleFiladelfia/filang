@@ -1,7 +1,7 @@
 #ifndef FILANG_TOKEN_H
 #define FILANG_TOKEN_H
 
-typedef enum{
+typedef enum {
 
     //parenthesis
     TOKEN_LEFT_PAREN, TOKEN_RIGHT_PAREN,
@@ -37,11 +37,11 @@ typedef enum{
     TOKEN_EOF, TOKEN_TRUE, TOKEN_FALSE, TOKEN_NIL,
 
     TOKEN_ERROR
-}TokenType;
+} TokenType;
 
 typedef struct {
     TokenType type;
-    const char* start;
+    const char *start;
     int length;
     int line;
 } Token;

@@ -1,11 +1,12 @@
 #ifndef FILANG_CHUNK_H
 #define FILANG_CHUNK_H
+
 #include <stdint.h>
 #include <stddef.h>
 #include "value.h"
 
 
-typedef enum{
+typedef enum {
     OP_RETURN,
     OP_ADD,
     OP_SUBTRACT,
@@ -21,19 +22,21 @@ typedef enum{
     OP_TRUE,
     OP_FALSE,
     OP_CONSTANT
-}OpCode;
+} OpCode;
 
-typedef struct{
-    uint8_t* code;
+typedef struct {
+    uint8_t *code;
     int count;
     int capacity;
     ValueArray constants;
-}Chunk;
+} Chunk;
 
-void initChunk(Chunk* chunk);
-void freeChunk(Chunk* chunk);
-void writeChunk(Chunk* chunk, uint8_t byte, int line);
+void initChunk(Chunk *chunk);
 
-int writeConstant(Chunk* chunk, Value value);
+void freeChunk(Chunk *chunk);
+
+void writeChunk(Chunk *chunk, uint8_t byte, int line);
+
+int writeConstant(Chunk *chunk, Value value);
 
 #endif //FILANG_CHUNK_H
