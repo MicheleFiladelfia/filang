@@ -4,10 +4,12 @@
 
 #include "token.h"
 #include <stdbool.h>
+#include <stdint-gcc.h>
 
 typedef enum {
     VAL_BOOL,
-    VAL_NUMBER,
+    VAL_FLOAT,
+    VAL_INTEGER,
     VAL_NIL
 } ValueType;
 
@@ -15,7 +17,8 @@ typedef struct {
     ValueType type;
     union {
         bool boolean;
-        double number;
+        double floatingPoint;
+        int64_t integer;
     } as;
 } Value;
 
@@ -27,11 +30,14 @@ typedef struct {
 
 
 #define IS_BOOL(value) ((value).type == VAL_BOOL)
-#define IS_NUMBER(value) ((value).type == VAL_NUMBER)
+#define IS_FLOAT(value) ((value).type == VAL_FLOAT)
+#define IS_INTEGER(value) ((value).type == VAL_INTEGER)
+#define IS_NUMERIC(value) (IS_FLOAT(value) || IS_INTEGER(value) || IS_BOOL(value))
 #define IS_NIL(value) ((value).type == VAL_NIL)
 #define BOOL_CAST(value) ((value) ? (Value){VAL_BOOL, {.boolean = true}} : (Value){VAL_BOOL, {.boolean = false}})
-#define NUMBER_CAST(value) ((Value){VAL_NUMBER, {.number = value}})
-#define NIL ((Value){VAL_NIL, {.number = 0}})
+#define FLOAT_CAST(value) ((Value){VAL_FLOAT, {.floatingPoint = (double) value}})
+#define INTEGER_CAST(value) ((Value){VAL_INTEGER, {.integer = (int64_t) value}})
+#define NIL ((Value){VAL_NIL, {.integer = 0}})
 
 void printValue(Value value);
 

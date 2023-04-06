@@ -209,8 +209,14 @@ static void grouping() {
 }
 
 static void number() {
-    double value = strtod(parser.previous.start, NULL);
-    emitConstant(NUMBER_CAST(value));
+    if (parser.previous.type == TOKEN_INTEGER) {
+        int64_t value = strtol(parser.previous.start, NULL, 10);
+        emitConstant(INTEGER_CAST(value));
+        return;
+    } else {
+        double value = strtod(parser.previous.start, NULL);
+        emitConstant(FLOAT_CAST(value));
+    }
 }
 
 static void boolean() {
@@ -253,7 +259,8 @@ ParseRule parseRules[] = {
         [TOKEN_LESS_EQUAL]  =   {NULL, binary, PrecCompare},
         [TOKEN_IDENTIFIER]  =   {NULL, NULL, PrecNone},
         [TOKEN_STRING]      =   {NULL, NULL, PrecNone},
-        [TOKEN_NUMBER]      =   {number, NULL, PrecNone},
+        [TOKEN_INTEGER]      =   {number, NULL, PrecNone},
+        [TOKEN_FLOAT]      =   {number, NULL, PrecNone},
         [TOKEN_RETURN]      =   {NULL, NULL, PrecNone},
         [TOKEN_IF]          =   {NULL, NULL, PrecNone},
         [TOKEN_ELSE]        =   {NULL, NULL, PrecNone},

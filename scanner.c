@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include "scanner.h"
 #include "token.h"
 
@@ -78,14 +79,17 @@ static Token makeToken(TokenType type) {
 }
 
 static Token number() {
+    bool isFloat = false;
+
     while (isDigit(peek())) advance();
 
     if (peek() == '.' && isDigit(peekNext())) {
+        isFloat = true;
         advance();
         while (isDigit(peek())) advance();
     }
 
-    return makeToken(TOKEN_NUMBER);
+    return isFloat ? makeToken(TOKEN_FLOAT) : makeToken(TOKEN_INTEGER);
 }
 
 bool checkKeyword(char *expected) {

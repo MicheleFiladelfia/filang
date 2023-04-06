@@ -30,8 +30,11 @@ void printValue(Value value) {
         case VAL_BOOL:
             printf(value.as.boolean == 0 ? "false" : "true");
             break;
-        case VAL_NUMBER:
-            printf("%g", value.as.number);
+        case VAL_FLOAT:
+            printf("%.15g", value.as.floatingPoint);
+            break;
+        case VAL_INTEGER:
+            printf("%ld", value.as.integer);
             break;
         case VAL_NIL:
             printf("nil");
