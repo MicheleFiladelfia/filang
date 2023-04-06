@@ -36,7 +36,7 @@ bool isTrue(Value value) {
     if (IS_BOOL(value)) {
         return value.as.boolean;
     } else if (IS_NIL(value)) {
-        return true;
+        return false;
     } else if (IS_NUMBER(value)) {
         return value.as.number != 0;
     }
