@@ -17,6 +17,7 @@ typedef enum {
     OP_NOT,
     OP_AND,
     OP_OR,
+    OP_TERNARY,
     OP_PRINT,
     OP_GREATER,
     OP_LESS,

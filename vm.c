@@ -24,10 +24,25 @@ Value pop() {
     return *vm.stackTop;
 }
 
+void popValues(int n) {
+    vm.stackTop -= n;
+}
+
 Value peek(int count) {
     return vm.stackTop[-1 - count];
 }
 
+bool isTrue(Value value) {
+    if (IS_BOOL(value)) {
+        return value.as.boolean;
+    } else if (IS_NIL(value)) {
+        return true;
+    } else if (IS_NUMBER(value)) {
+        return value.as.number != 0;
+    }
+
+    return true;
+}
 
 InterpretResult execute() {
 #define READ_BYTE() (*vm.ip++)
@@ -118,19 +133,19 @@ InterpretResult execute() {
                 }
                 break;
             case OP_NOT:
-                if (IS_BOOL(peek(0))) {
-                    push(BOOL_CAST(!pop().as.boolean));
-                } else if (IS_NUMBER(peek(0))) {
-                    push(BOOL_CAST(!pop().as.number));
-                } else if (IS_NIL(peek(0))) {
-                    pop();
-                    push(BOOL_CAST(true));
+                push(BOOL_CAST(!isTrue(pop())));
+                break;
+            case OP_TERNARY:
+                if (isTrue(peek(2))) {
+                    Value result = peek(1);
+                    popValues(3);
+                    push(result);
                 } else {
-                    //TODO: Print error message
+                    Value result = peek(0);
+                    popValues(3);
+                    push(result);
                 }
                 break;
-
-
         }
     }
 #undef READ_BYTE

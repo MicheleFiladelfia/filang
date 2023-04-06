@@ -201,6 +201,8 @@ Token scanToken() {
             return makeToken(TOKEN_COLONS);
         case '^':
             return makeToken(TOKEN_POW);
+        case '?':
+            return makeToken(TOKEN_INTERROGATION);
         case '=':
             if (match('=')) {
                 return makeToken(TOKEN_EQUAL_EQUAL);

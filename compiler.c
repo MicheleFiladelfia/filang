@@ -16,6 +16,7 @@ Chunk *compileChunk;
 typedef enum {
     PrecNone,       // None
     PrecAssignment, // =
+    PrecTernary,    // ? :
     PrecOr,         // or
     PrecAnd,        // and
     PrecEquals,     // == !=
@@ -165,7 +166,7 @@ static void binary() {
         case TOKEN_POW:
             emitByte(OP_POW);
             break;
-            case TOKEN_AND:
+        case TOKEN_AND:
             emitByte(OP_AND);
             break;
         case TOKEN_OR:
@@ -192,6 +193,13 @@ static void binary() {
         default:
             return;
     }
+}
+
+static void ternary() {
+    parsePrecedence(PrecTernary);
+    consume(TOKEN_COLONS, "expected ';' after '?' operator.");
+    parsePrecedence(PrecTernary);
+    emitByte(OP_TERNARY);
 }
 
 static void grouping() {
@@ -234,6 +242,7 @@ ParseRule parseRules[] = {
         [TOKEN_NOT]        =   {unary, NULL, PrecUnary},
         [TOKEN_PRINT]       =   {print, NULL, PrecNone},
         [TOKEN_COLONS]      =   {NULL, NULL, PrecNone},
+        [TOKEN_INTERROGATION] = {NULL, ternary, PrecTernary},
         [TOKEN_BANG_EQUAL]  =   {NULL, binary, PrecEquals},
         [TOKEN_EQUAL]       =   {NULL, NULL, PrecAssignment},
         [TOKEN_EQUAL_EQUAL] =   {NULL, binary, PrecEquals},
