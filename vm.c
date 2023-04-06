@@ -50,23 +50,45 @@ InterpretResult execute() {
 //TODO: Print error message when types are not a number
 #define BINARY_NUMBER_OPERATION(castType, operator) \
         do{ \
-            if(!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))){ \
+            if((!IS_NUMBER(peek(0)) && !IS_BOOL(peek(0))) || (!IS_NUMBER(peek(1)) && !IS_BOOL(peek(1)))){ \
                 return RUNTIME_ERROR; \
-            } \
-            double b = pop().as.number; \
-            double a = pop().as.number;                         \
+            }                                       \
+            double b,a;\
+            if(IS_BOOL(peek(0))){                   \
+                b = pop().as.boolean;\
+            }else{\
+                b = pop().as.number; \
+            }\
+    \
+            if(IS_BOOL(peek(0))){                   \
+                a = pop().as.boolean;\
+            }else{\
+                a = pop().as.number; \
+            }\
+                                                    \
             push(castType((a operator b)));                  \
         }while(false)
 
 
 #define BINARY_NUMBER_FUNCTION(castType, function) \
         do{ \
-            if(!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))){ \
+            if((!IS_NUMBER(peek(0)) && !IS_BOOL(peek(0))) || (!IS_NUMBER(peek(1)) && !IS_BOOL(peek(1)))){ \
                 return RUNTIME_ERROR; \
-            } \
-            double b = pop().as.number; \
-            double a = pop().as.number;                         \
-            push(castType(function(a, b)));                  \
+            }                                       \
+            double b,a;\
+            if(IS_BOOL(peek(0))){                   \
+                b = pop().as.boolean;\
+            }else{\
+                b = pop().as.number; \
+            }\
+    \
+            if(IS_BOOL(peek(0))){                   \
+                a = pop().as.boolean;\
+            }else{\
+                a = pop().as.number; \
+            }\
+                                                    \
+            push(castType(function(a,b)));                  \
         }while(false)
 
 
