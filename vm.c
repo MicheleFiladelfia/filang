@@ -14,25 +14,25 @@ void freeVM() {
 
 }
 
-void push(Value value) {
+static void push(Value value) {
     *vm.stackTop = value;
     vm.stackTop++;
 }
 
-Value pop() {
+static Value pop() {
     vm.stackTop--;
     return *vm.stackTop;
 }
 
-void popValues(int n) {
+static void popValues(int n) {
     vm.stackTop -= n;
 }
 
-Value peek(int count) {
+static Value peek(int count) {
     return vm.stackTop[-1 - count];
 }
 
-bool isTrue(Value value) {
+static bool isTrue(Value value) {
     if (IS_BOOL(value)) {
         return value.as.boolean;
     } else if (IS_NIL(value)) {
