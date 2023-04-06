@@ -33,6 +33,56 @@ struct Point{
     }
 }
 
+
+#linked list implementation
+struct Node{
+    var value;
+    var next;
+
+    fn init(value = 0, next = nil){
+        self.value = value;
+        self.next = next;
+    }
+}
+
+struct LinkedList{
+    var head;
+    var tail;
+    var size;
+
+    fn init(){
+        self.head = Node();
+        self.tail = Node();
+        self.size = 0;
+    }
+
+    fn add(value){
+        var node = Node(value, self.tail);
+        if(self.size == 0){
+            self.head = node;
+        }
+        self.tail = node;
+        self.size++;
+    }
+
+    fn removeLast(){
+        if(self.size == 0){
+            return;
+        }
+        var node = self.head;
+        self.head = node.next;
+        self.size--;
+        return node.value;
+    }
+
+    fn stringify(node = self.head){
+        if(node == self.tail){
+            return node.value;
+        }
+        return node.value + ", " + self.stringify(node.next);
+    }
+}
+
 fn main(){
     var x = 10;
     print fib(x); #55
