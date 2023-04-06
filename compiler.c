@@ -180,6 +180,17 @@ static void number() {
     emitConstant(NUMBER_CAST(value));
 }
 
+static void boolean() {
+    if (parser.previous.type == TOKEN_TRUE) {
+        emitByte(OP_TRUE);
+    } else {
+        emitByte(OP_FALSE);
+    }
+}
+
+static void nil() {
+    emitByte(OP_NIL);
+}
 
 ParseRule parseRules[] = {
         [TOKEN_LEFT_PAREN]  =   {grouping, NULL, PrecNone},
@@ -215,9 +226,9 @@ ParseRule parseRules[] = {
         [TOKEN_FN]          =   {NULL, NULL, PrecNone},
         [TOKEN_VAR]         =   {NULL, NULL, PrecNone},
         [TOKEN_EOF]         =   {NULL, NULL, PrecNone},
-        [TOKEN_TRUE]        =   {NULL, NULL, PrecNone},
-        [TOKEN_FALSE]       =   {NULL, NULL, PrecNone},
-        [TOKEN_NIL]         =   {NULL, NULL, PrecNone},
+        [TOKEN_TRUE]        =   {boolean, NULL, PrecNone},
+        [TOKEN_FALSE]       =   {boolean, NULL, PrecNone},
+        [TOKEN_NIL]         =   {nil, NULL, PrecNone},
         [TOKEN_ERROR]       =   {NULL, NULL, PrecNone}
 };
 
