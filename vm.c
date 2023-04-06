@@ -98,7 +98,7 @@ InterpretResult execute() {
             case OP_LESS:
                 BINARY_NUMBER_OPERATION(BOOL_CAST, <);
                 break;
-            case OP_EQUAL:
+            case OP_EQUALS:
                 if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {
                     push(BOOL_CAST(pop().as.number == pop().as.number));
                 } else if (IS_BOOL(peek(0)) && IS_BOOL(peek(1))) {

@@ -165,6 +165,30 @@ static void binary() {
         case TOKEN_POW:
             emitByte(OP_POW);
             break;
+            case TOKEN_AND:
+            emitByte(OP_AND);
+            break;
+        case TOKEN_OR:
+            emitByte(OP_OR);
+            break;
+        case TOKEN_EQUAL_EQUAL:
+            emitByte(OP_EQUALS);
+            break;
+        case TOKEN_BANG_EQUAL:
+            emitBytes(OP_EQUALS, OP_NOT);
+            break;
+        case TOKEN_GREATER:
+            emitByte(OP_GREATER);
+            break;
+        case TOKEN_GREATER_EQUAL:
+            emitBytes(OP_LESS, OP_NOT);
+            break;
+        case TOKEN_LESS:
+            emitByte(OP_LESS);
+            break;
+        case TOKEN_LESS_EQUAL:
+            emitBytes(OP_GREATER, OP_NOT);
+            break;
         default:
             return;
     }
