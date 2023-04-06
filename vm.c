@@ -112,8 +112,6 @@ InterpretResult interpret(const char* source){
         return COMPILE_ERROR;
     }
 
-    writeChunk(&chunk,OP_PRINT,1);
-
     vm.chunk = &chunk;
     vm.ip = vm.chunk->code;
 

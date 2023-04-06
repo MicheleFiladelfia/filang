@@ -121,6 +121,11 @@ static void expression(){
     parsePrecedence(PrecAssignment);
 }
 
+static void print(){
+    parsePrecedence(PrecNone+1);
+    emitByte(OP_PRINT);
+}
+
 static void unary() {
     TokenType operatorType = parser.previous.type;
     parsePrecedence(PrecUnary);
@@ -131,9 +136,6 @@ static void unary() {
             break;
         case TOKEN_MINUS:
             emitByte(OP_NEGATE);
-            break;
-        case TOKEN_PRINT:
-            emitByte(OP_PRINT);
             break;
         case TOKEN_PLUS:
             break;
@@ -186,7 +188,7 @@ ParseRule parseRules[] = {
         [TOKEN_POW]         =   {NULL,     binary,   PrecFactor},
         [TOKEN_AND]         =   {NULL,     binary,   PrecAnd},
         [TOKEN_OR]          =   {NULL,     binary,   PrecOr},
-        [TOKEN_PRINT]       =   {unary,     NULL,    PrecAssignment},
+        [TOKEN_PRINT]       =   {print,     NULL,    PrecNone},
         [TOKEN_COLONS]      =   {NULL,     NULL,     PrecNone},
         [TOKEN_BANG]        =   {unary,    NULL,     PrecUnary},
         [TOKEN_BANG_EQUAL]  =   {NULL,     binary,   PrecEquals},
