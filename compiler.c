@@ -131,7 +131,7 @@ static void unary() {
     parsePrecedence(PrecUnary);
 
     switch (operatorType) {
-        case TOKEN_BANG:
+        case TOKEN_NOT:
             emitByte(OP_NOT);
             break;
         case TOKEN_MINUS:
@@ -196,9 +196,9 @@ ParseRule parseRules[] = {
         [TOKEN_POW]         =   {NULL, binary, PrecFactor},
         [TOKEN_AND]         =   {NULL, binary, PrecAnd},
         [TOKEN_OR]          =   {NULL, binary, PrecOr},
+        [TOKEN_NOT]        =   {unary, NULL, PrecUnary},
         [TOKEN_PRINT]       =   {print, NULL, PrecNone},
         [TOKEN_COLONS]      =   {NULL, NULL, PrecNone},
-        [TOKEN_BANG]        =   {unary, NULL, PrecUnary},
         [TOKEN_BANG_EQUAL]  =   {NULL, binary, PrecEquals},
         [TOKEN_EQUAL]       =   {NULL, NULL, PrecAssignment},
         [TOKEN_EQUAL_EQUAL] =   {NULL, binary, PrecEquals},

@@ -117,6 +117,20 @@ InterpretResult execute() {
                     return RUNTIME_ERROR;
                 }
                 break;
+            case OP_NOT:
+                if (IS_BOOL(peek(0))) {
+                    push(BOOL_CAST(!pop().as.boolean));
+                } else if (IS_NUMBER(peek(0))) {
+                    push(BOOL_CAST(!pop().as.number));
+                } else if (IS_NIL(peek(0))) {
+                    pop();
+                    push(BOOL_CAST(true));
+                } else {
+                    //TODO: Print error message
+                }
+                break;
+
+
         }
     }
 #undef READ_BYTE

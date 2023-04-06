@@ -123,6 +123,7 @@ static Token identifier() {
             if (checkKeyword("rue")) return makeToken(TOKEN_TRUE);
         case 'n':
             if (checkKeyword("il")) return makeToken(TOKEN_NIL);
+            if (checkKeyword("ot")) return makeToken(TOKEN_NOT);
 
     }
 
@@ -209,8 +210,6 @@ Token scanToken() {
         case '!':
             if (match('=')) {
                 return makeToken(TOKEN_BANG_EQUAL);
-            } else {
-                return makeToken(TOKEN_BANG);
             }
         case '>':
             if (match('=')) {
