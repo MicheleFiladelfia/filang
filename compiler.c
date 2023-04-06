@@ -103,7 +103,7 @@ static void parsePrecedence(ParsePrec precedence) {
     ParseFn prefix = getRule(parser.previous.type)->prefix;
 
     if (prefix == NULL) {
-        errorAtPrevious("Expected expression.");
+        errorAtPrevious("expected expression.");
         return;
     }
 
@@ -233,7 +233,7 @@ bool compile(Chunk *chunk, const char *source) {
 
     advance();
     expression();
-    consume(TOKEN_SEMICOLON, "Expected ';' after expression.");
+    consume(TOKEN_SEMICOLON, "expected ';' after expression.");
 
     return !parser.hasError;
 }
