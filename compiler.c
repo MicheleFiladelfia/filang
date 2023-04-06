@@ -162,6 +162,9 @@ static void binary() {
         case TOKEN_SLASH:
             emitByte(OP_DIVIDE);
             break;
+        case TOKEN_POW:
+            emitByte(OP_POW);
+            break;
         default:
             return;
     }

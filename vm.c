@@ -1,8 +1,8 @@
 #include <stdio.h>
+#include <math.h>
 #include "vm.h"
 #include "chunk.h"
 #include "compiler.h"
-
 
 VM vm;
 
@@ -28,20 +28,32 @@ Value peek(int count) {
     return vm.stackTop[-1 - count];
 }
 
+
 InterpretResult execute() {
 #define READ_BYTE() (*vm.ip++)
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
-
-    //TODO: Print error message when types are not a number
+//TODO: Print error message when types are not a number
 #define BINARY_NUMBER_OPERATION(castType, operator) \
         do{ \
             if(!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))){ \
                 return RUNTIME_ERROR; \
             } \
             double b = pop().as.number; \
-            double a = pop().as.number; \
-            push(castType(a operator b)); \
+            double a = pop().as.number;                         \
+            push(castType((a operator b)));                  \
         }while(false)
+
+
+#define BINARY_NUMBER_FUNCTION(castType, function) \
+        do{ \
+            if(!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))){ \
+                return RUNTIME_ERROR; \
+            } \
+            double b = pop().as.number; \
+            double a = pop().as.number;                         \
+            push(castType(function(a, b)));                  \
+        }while(false)
+
 
     for (;;) {
         uint8_t instruction;
@@ -72,6 +84,9 @@ InterpretResult execute() {
                 break;
             case OP_MULTIPLY:
                 BINARY_NUMBER_OPERATION(NUMBER_CAST, *);
+                break;
+            case OP_POW:
+                BINARY_NUMBER_FUNCTION(NUMBER_CAST, pow);
                 break;
             case OP_PRINT:
                 printValue(pop());
@@ -106,6 +121,8 @@ InterpretResult execute() {
     }
 #undef READ_BYTE
 #undef READ_CONSTANT
+#undef BINARY_NUMBER_OPERATION
+
 }
 
 InterpretResult interpret(const char *source) {
