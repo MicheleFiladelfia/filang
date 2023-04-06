@@ -23,6 +23,7 @@ typedef enum {
     PrecCompare,    // < > <= >=
     PrecTerm,       // + -
     PrecFactor,     // * /
+    PrecPow,        // ^
     PrecUnary,      // - !
     PrecCall        // . ()
 } ParsePrec;
@@ -236,7 +237,7 @@ ParseRule parseRules[] = {
         [TOKEN_SEMICOLON]   =   {NULL, NULL, PrecNone},
         [TOKEN_SLASH]       =   {NULL, binary, PrecFactor},
         [TOKEN_STAR]        =   {NULL, binary, PrecFactor},
-        [TOKEN_POW]         =   {NULL, binary, PrecFactor},
+        [TOKEN_POW]         =   {NULL, binary, PrecPow},
         [TOKEN_AND]         =   {NULL, binary, PrecAnd},
         [TOKEN_OR]          =   {NULL, binary, PrecOr},
         [TOKEN_NOT]        =   {unary, NULL, PrecUnary},
