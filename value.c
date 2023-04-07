@@ -42,3 +42,15 @@ void printValue(Value value) {
     }
 }
 
+char *typeToString(ValueType type) {
+    switch (type) {
+        case VAL_BOOL:
+            return "<primitive 'bool'>";
+        case VAL_FLOAT:
+            return "<primitive 'float'>";
+        case VAL_INTEGER:
+            return "<primitive 'integer'>";
+        case VAL_NIL:
+            return "<primitive 'nil'>";
+    }
+}

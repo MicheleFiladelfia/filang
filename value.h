@@ -47,4 +47,6 @@ void initValueArray(ValueArray *array);
 
 void freeValueArray(ValueArray *array);
 
+char *typeToString(ValueType type);
+
 #endif //FILANG_VALUE_H
