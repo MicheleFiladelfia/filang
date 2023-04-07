@@ -43,7 +43,7 @@ static void compileError(Token *token, const char *message) {
     parser.hasError = true;
 
 
-    fprintf(stderr, "[line %d] Error", token->line);
+    fprintf(stderr, "[line %d] CompileError", token->line);
 
     if (token->type == TOKEN_EOF) {
         fprintf(stderr, " at end");
@@ -198,14 +198,14 @@ static void binary() {
 
 static void ternary() {
     parsePrecedence(PrecTernary);
-    consume(TOKEN_COLONS, "expected ';' after '?' operator.");
+    consume(TOKEN_COLONS, "expected ':' after '?' operator.");
     parsePrecedence(PrecTernary);
     emitByte(OP_TERNARY);
 }
 
 static void grouping() {
     expression();
-    consume(TOKEN_RIGHT_PAREN, "'(' was never closed.");
+    consume(TOKEN_RIGHT_PAREN, "expected ')' after expression.");
 }
 
 static void number() {

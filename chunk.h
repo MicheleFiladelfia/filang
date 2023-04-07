@@ -32,6 +32,7 @@ typedef struct {
     uint8_t *code;
     int count;
     int capacity;
+    int *lines;
     ValueArray constants;
 } Chunk;
 

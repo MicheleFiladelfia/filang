@@ -1,13 +1,18 @@
 #include <stdio.h>
 #include <math.h>
+#include <stdarg.h>
 #include "vm.h"
 #include "chunk.h"
 #include "compiler.h"
 
 VM vm;
 
-void initVM() {
+static void resetStack() {
     vm.stackTop = vm.stack;
+}
+
+void initVM() {
+    resetStack();
 }
 
 void freeVM() {
@@ -45,13 +50,27 @@ static bool isTrue(Value value) {
     return true;
 }
 
+static void runtimeError(const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+    size_t instruction = vm.ip - vm.chunk->code - 1;
+    int line = vm.chunk->lines[instruction];
+    fprintf(stderr, "[line %d] RuntimeError: ", line);
+    vfprintf(stderr, format, args);
+    fprintf(stderr, "\n");
+    va_end(args);
+    resetStack();
+}
+
 InterpretResult execute() {
 #define READ_BYTE() (*vm.ip++)
+#define NEXT_BYTE() (*(vm.ip))
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
 //TODO: Print compileError message when types are not a number
-#define BINARY_NUMBER_OPERATION(castBool, operator) \
+#define BINARY_NUMBER_OPERATION(castBool, operator, stringOperator) \
         do{ \
             if(!IS_NUMERIC(peek(0))  || !IS_NUMERIC(peek(1))){ \
+                runtimeError("unsupported operand type(s) for %s: %s and %s.", stringOperator, typeToString(peek(1).type), typeToString(peek(0).type));                                    \
                 return RUNTIME_ERROR; \
             }                                       \
                                                     \
@@ -100,9 +119,10 @@ InterpretResult execute() {
         }while(false)
 
 
-#define BINARY_NUMBER_FUNCTION(castBool, function) \
+#define BINARY_NUMBER_FUNCTION(castBool, function, stringFunction) \
         do{ \
             if(!IS_NUMERIC(peek(0))  || !IS_NUMERIC(peek(1))){ \
+                runtimeError("unsupported operand type(s) for %s: %s and %s.", stringFunction, typeToString(peek(1).type), typeToString(peek(0).type));                                    \
                 return RUNTIME_ERROR; \
             }                                       \
                                                     \
@@ -171,39 +191,44 @@ InterpretResult execute() {
                 push(NIL);
                 break;
             case OP_ADD:
-                BINARY_NUMBER_OPERATION(false, +);
+                BINARY_NUMBER_OPERATION(false, +, "+");
                 break;
             case OP_SUBTRACT:
-                BINARY_NUMBER_OPERATION(false, -);
+                BINARY_NUMBER_OPERATION(false, -, "-");
                 break;
             case OP_DIVIDE:
-                if (IS_INTEGER(peek(0)) && peek(0).as.integer == 0) {
-                    //TODO: Print compileError message
-                    return RUNTIME_ERROR;
-                } else if (IS_FLOAT(peek(0)) && peek(0).as.floatingPoint == 0.0) {
-                    //TODO: Print compileError message
-                    return RUNTIME_ERROR;
-                } else if (IS_BOOL(peek(0)) && peek(0).as.boolean == false) {
-                    //TODO: Print compileError message
+                if ((IS_INTEGER(peek(0)) && peek(0).as.integer == 0) ||
+                    (IS_FLOAT(peek(0)) && peek(0).as.floatingPoint == 0.0) ||
+                    (IS_BOOL(peek(0)) && peek(0).as.boolean == false)) {
+                    runtimeError("division by zero.");
                     return RUNTIME_ERROR;
                 }
-                BINARY_NUMBER_OPERATION(false, /);
+
+                BINARY_NUMBER_OPERATION(false, /, "/");
                 break;
             case OP_MULTIPLY:
-                BINARY_NUMBER_OPERATION(false, *);
+                BINARY_NUMBER_OPERATION(false, *, "*");
                 break;
             case OP_POW:
-                BINARY_NUMBER_FUNCTION(false, pow);
+                BINARY_NUMBER_FUNCTION(false, pow, "^");
                 break;
             case OP_PRINT:
                 printValue(pop());
                 printf("\n");
                 break;
             case OP_GREATER:
-                BINARY_NUMBER_OPERATION(true, >);
+                if (NEXT_BYTE() == OP_NOT) {
+                    BINARY_NUMBER_OPERATION(true, >, "<=");
+                } else {
+                    BINARY_NUMBER_OPERATION(true, >, ">");
+                }
                 break;
             case OP_LESS:
-                BINARY_NUMBER_OPERATION(true, <);
+                if (NEXT_BYTE() == OP_NOT) {
+                    BINARY_NUMBER_OPERATION(true, >, "<=");
+                } else {
+                    BINARY_NUMBER_OPERATION(true, >, ">");
+                }
                 break;
             case OP_EQUALS:
                 if (IS_FLOAT(peek(0)) && IS_FLOAT(peek(1))) {
@@ -238,7 +263,7 @@ InterpretResult execute() {
                 } else if (IS_BOOL(peek(0))) {
                     push(INTEGER_CAST(-pop().as.boolean));
                 } else {
-                    //TODO: Print compileError message
+                    runtimeError("unsupported operand type for %s: %s.", "-", typeToString(peek(0).type));
                     return RUNTIME_ERROR;
                 }
                 break;
@@ -260,6 +285,7 @@ InterpretResult execute() {
     }
 #undef READ_BYTE
 #undef READ_CONSTANT
+#undef NEXT_BYTE
 #undef BINARY_NUMBER_OPERATION
 #undef BINARY_NUMBER_FUNCTION
 
