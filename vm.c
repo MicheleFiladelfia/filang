@@ -48,7 +48,7 @@ static bool isTrue(Value value) {
 InterpretResult execute() {
 #define READ_BYTE() (*vm.ip++)
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
-//TODO: Print error message when types are not a number
+//TODO: Print compileError message when types are not a number
 #define BINARY_NUMBER_OPERATION(castBool, operator) \
         do{ \
             if(!IS_NUMERIC(peek(0))  || !IS_NUMERIC(peek(1))){ \
@@ -178,13 +178,13 @@ InterpretResult execute() {
                 break;
             case OP_DIVIDE:
                 if (IS_INTEGER(peek(0)) && peek(0).as.integer == 0) {
-                    //TODO: Print error message
+                    //TODO: Print compileError message
                     return RUNTIME_ERROR;
                 } else if (IS_FLOAT(peek(0)) && peek(0).as.floatingPoint == 0.0) {
-                    //TODO: Print error message
+                    //TODO: Print compileError message
                     return RUNTIME_ERROR;
                 } else if (IS_BOOL(peek(0)) && peek(0).as.boolean == false) {
-                    //TODO: Print error message
+                    //TODO: Print compileError message
                     return RUNTIME_ERROR;
                 }
                 BINARY_NUMBER_OPERATION(false, /);
@@ -238,7 +238,7 @@ InterpretResult execute() {
                 } else if (IS_BOOL(peek(0))) {
                     push(INTEGER_CAST(-pop().as.boolean));
                 } else {
-                    //TODO: Print error message
+                    //TODO: Print compileError message
                     return RUNTIME_ERROR;
                 }
                 break;

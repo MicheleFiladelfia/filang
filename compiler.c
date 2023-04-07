@@ -37,7 +37,7 @@ typedef struct {
 } ParseRule;
 
 
-static void error(Token *token, const char *message) {
+static void compileError(Token *token, const char *message) {
     if (parser.panicMode) return;
     parser.panicMode = true;
     parser.hasError = true;
@@ -57,11 +57,11 @@ static void error(Token *token, const char *message) {
 }
 
 static void errorAtCurrent(const char *message) {
-    error(&parser.current, message);
+    compileError(&parser.current, message);
 }
 
 static void errorAtPrevious(const char *message) {
-    error(&parser.previous, message);
+    compileError(&parser.previous, message);
 }
 
 
