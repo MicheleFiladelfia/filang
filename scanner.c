@@ -196,7 +196,11 @@ Token scanToken() {
         case '+':
             return makeToken(TOKEN_PLUS);
         case '*':
-            return makeToken(TOKEN_STAR);
+            if (match('*')) {
+                return makeToken(TOKEN_STAR_STAR);
+            } else {
+                return makeToken(TOKEN_STAR);
+            }
         case '/':
             return makeToken(TOKEN_SLASH);
         case '%':
@@ -205,8 +209,6 @@ Token scanToken() {
             return makeToken(TOKEN_SEMICOLON);
         case ':':
             return makeToken(TOKEN_COLONS);
-        case '^':
-            return makeToken(TOKEN_POW);
         case '?':
             return makeToken(TOKEN_INTERROGATION);
         case '=':

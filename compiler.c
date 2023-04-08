@@ -167,7 +167,7 @@ static void binary() {
         case TOKEN_PERCENT:
             emitByte(OP_MODULO);
             break;
-        case TOKEN_POW:
+        case TOKEN_STAR_STAR:
             emitByte(OP_POW);
             break;
         case TOKEN_AND:
@@ -247,7 +247,7 @@ ParseRule parseRules[] = {
         [TOKEN_SLASH]       =   {NULL, binary, PrecFactor},
         [TOKEN_STAR]        =   {NULL, binary, PrecFactor},
         [TOKEN_PERCENT]     =   {NULL, binary, PrecFactor},
-        [TOKEN_POW]         =   {NULL, binary, PrecPow},
+        [TOKEN_STAR_STAR]         =   {NULL, binary, PrecPow},
         [TOKEN_AND]         =   {NULL, binary, PrecAnd},
         [TOKEN_OR]          =   {NULL, binary, PrecOr},
         [TOKEN_NOT]        =   {unary, NULL, PrecUnary},
