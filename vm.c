@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdarg.h>
+#include <string.h>
 #include "vm.h"
 #include "chunk.h"
 #include "compiler.h"
@@ -66,7 +67,6 @@ InterpretResult execute() {
 #define READ_BYTE() (*vm.ip++)
 #define NEXT_BYTE() (*(vm.ip))
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
-//TODO: Print compileError message when types are not a number
 #define BINARY_NUMBER_OPERATION(castBool, operator, stringOperator) \
         do{ \
             if(!IS_NUMERIC(peek(0))  || !IS_NUMERIC(peek(1))){ \
@@ -170,7 +170,26 @@ InterpretResult execute() {
             }\
         }while(false)
 
-
+#define BINARY_INTEGER_OPERATION(operator, stringOperator) \
+        do{ \
+            if((!IS_BOOL(peek(0))  && !IS_INTEGER(peek(0))) || (!IS_BOOL(peek(1)) && !IS_INTEGER(peek(1)))){ \
+                runtimeError("unsupported operand type(s) for %s: %s and %s.", stringOperator, typeToString(peek(1).type), typeToString(peek(0).type));                                    \
+                return RUNTIME_ERROR; \
+            }                                       \
+                                                    \
+            if(strcmp(stringOperator,"%") == 0){              \
+                if(peek(0).as.integer == 0){    \
+                    runtimeError("division by zero."); \
+                    return RUNTIME_ERROR;           \
+                }                                   \
+\
+            }                                       \
+                                                    \
+            int64_t b = pop().as.integer;           \
+            int64_t a = pop().as.integer;\
+                                                    \
+            push(INTEGER_CAST(a operator b));       \
+        }while(false)
 
     for (;;) {
         uint8_t instruction;
@@ -210,19 +229,7 @@ InterpretResult execute() {
                 BINARY_NUMBER_OPERATION(false, *, "*");
                 break;
             case OP_MODULO:
-                if (!IS_INTEGER(peek(0)) || !IS_INTEGER(peek(1))) {
-                    runtimeError("unsupported operand type(s) for %%: %s and %s.", typeToString(peek(1).type),
-                                 typeToString(peek(0).type));
-                    return RUNTIME_ERROR;
-                }
-
-                if (peek(0).as.integer == 0) {
-                    runtimeError("division by zero.");
-                    return RUNTIME_ERROR;
-                }
-
-                Value b = pop(), a = pop();
-                push(INTEGER_CAST(a.as.integer % b.as.integer));
+                BINARY_INTEGER_OPERATION(%, "%");
                 break;
             case OP_POW:
                 BINARY_NUMBER_FUNCTION(false, pow, "^");
@@ -296,6 +303,30 @@ InterpretResult execute() {
                     push(result);
                 }
                 break;
+            case OP_BW_AND:
+                BINARY_INTEGER_OPERATION(&, "&");
+                break;
+            case OP_BW_OR:
+                BINARY_INTEGER_OPERATION(|, "|");
+                break;
+            case OP_XOR:
+                BINARY_INTEGER_OPERATION(^, "^");
+                break;
+            case OP_BW_NOT:
+                if (!IS_INTEGER(peek(0))) {
+                    runtimeError("unsupported operand type for ~: %s.", typeToString(peek(0).type));
+                    return RUNTIME_ERROR;
+                }
+
+                push(INTEGER_CAST(~pop().as.integer));
+                break;
+            case OP_SHIFT_LEFT:
+                BINARY_INTEGER_OPERATION(<<, "<<");
+                break;
+            case OP_SHIFT_RIGHT:
+                BINARY_INTEGER_OPERATION(>>, ">>");
+                break;
+
         }
     }
 #undef READ_BYTE
@@ -303,7 +334,7 @@ InterpretResult execute() {
 #undef NEXT_BYTE
 #undef BINARY_NUMBER_OPERATION
 #undef BINARY_NUMBER_FUNCTION
-
+#undef BINARY_INTEGER_OPERATION
 }
 
 InterpretResult interpret(const char *source) {

@@ -224,16 +224,27 @@ Token scanToken() {
         case '>':
             if (match('=')) {
                 return makeToken(TOKEN_GREATER_EQUAL);
+            } else if (match('>')) {
+                return makeToken(TOKEN_GREATER_GREATER);
             } else {
                 return makeToken(TOKEN_GREATER);
             }
         case '<':
             if (match('=')) {
                 return makeToken(TOKEN_LESS_EQUAL);
+            } else if (match('<')) {
+                return makeToken(TOKEN_LESS_LESS);
             } else {
                 return makeToken(TOKEN_LESS);
             }
-
+        case '^':
+            return makeToken(TOKEN_CARET);
+        case '|':
+            return makeToken(TOKEN_PIPE);
+        case '&':
+            return makeToken(TOKEN_AMPERSAND);
+        case '~':
+            return makeToken(TOKEN_TILDE);
         case '"' :
             return string();
     }

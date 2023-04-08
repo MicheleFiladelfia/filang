@@ -19,12 +19,16 @@ typedef enum {
     PrecTernary,    // ? :
     PrecOr,         // or
     PrecAnd,        // and
+    PrecBWOr,       // |
+    PrecXor,        // ^
+    PrecBWAnd,      // &
     PrecEquals,     // == !=
     PrecCompare,    // < > <= >=
+    PrecShift,      // << >>
     PrecTerm,       // + -
     PrecFactor,     // * / %
-    PrecPow,        // ^
-    PrecUnary,      // - !
+    PrecPow,        // **
+    PrecUnary,      // - ! ~
     PrecCall        // . ()
 } ParsePrec;
 
@@ -139,6 +143,8 @@ static void unary() {
         case TOKEN_MINUS:
             emitByte(OP_NEGATE);
             break;
+        case TOKEN_TILDE:
+            emitByte(OP_BW_NOT);
         case TOKEN_PLUS:
             break;
         default:
@@ -193,6 +199,21 @@ static void binary() {
             break;
         case TOKEN_LESS_EQUAL:
             emitBytes(OP_GREATER, OP_NOT);
+            break;
+        case TOKEN_AMPERSAND:
+            emitByte(OP_BW_AND);
+            break;
+        case TOKEN_PIPE:
+            emitByte(OP_BW_OR);
+            break;
+        case TOKEN_CARET:
+            emitByte(OP_XOR);
+            break;
+        case TOKEN_LESS_LESS:
+            emitByte(OP_SHIFT_LEFT);
+            break;
+        case TOKEN_GREATER_GREATER:
+            emitByte(OP_SHIFT_RIGHT);
             break;
         default:
             return;
@@ -253,6 +274,12 @@ ParseRule parseRules[] = {
         [TOKEN_NOT]        =   {unary, NULL, PrecUnary},
         [TOKEN_PRINT]       =   {print, NULL, PrecNone},
         [TOKEN_COLONS]      =   {NULL, NULL, PrecNone},
+        [TOKEN_AMPERSAND]   =   {NULL, binary, PrecBWAnd},
+        [TOKEN_PIPE]        =   {NULL, binary, PrecBWOr},
+        [TOKEN_CARET]       =   {NULL, binary, PrecXor},
+        [TOKEN_LESS_LESS]   =   {NULL, binary, PrecShift},
+        [TOKEN_GREATER_GREATER]   =   {NULL, binary, PrecShift},
+        [TOKEN_TILDE]       =   {unary, NULL, PrecUnary},
         [TOKEN_INTERROGATION] = {NULL, ternary, PrecTernary},
         [TOKEN_BANG_EQUAL]  =   {NULL, binary, PrecEquals},
         [TOKEN_EQUAL]       =   {NULL, NULL, PrecAssignment},
