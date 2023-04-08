@@ -31,7 +31,7 @@ typedef struct {
 
 #define IS_BOOL(value) ((value).type == VAL_BOOL)
 #define IS_FLOAT(value) ((value).type == VAL_FLOAT)
-#define IS_INTEGER(value) ((value).type == VAL_INTEGER)
+#define IS_INTEGER(value) (((value).type == VAL_INTEGER) || IS_BOOL(value))
 #define IS_NUMERIC(value) (IS_FLOAT(value) || IS_INTEGER(value) || IS_BOOL(value))
 #define IS_NIL(value) ((value).type == VAL_NIL)
 #define BOOL_CAST(value) ((value) ? (Value){VAL_BOOL, {.boolean = true}} : (Value){VAL_BOOL, {.boolean = false}})

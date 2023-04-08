@@ -39,16 +39,18 @@ static Value peek(int count) {
 }
 
 static bool isTrue(Value value) {
-    if (IS_BOOL(value)) {
-        return value.as.boolean;
-    } else if (IS_NIL(value)) {
-        return false;
-    } else if (IS_INTEGER(value)) {
-        return value.as.integer != 0;
-    } else if (IS_FLOAT(value)) {
-        return value.as.floatingPoint != 0;
+    switch (value.type) {
+        case VAL_BOOL:
+            return value.as.boolean;
+        case VAL_NIL:
+            return false;
+        case VAL_INTEGER:
+            return value.as.integer != 0;
+        case VAL_FLOAT:
+            return value.as.floatingPoint != 0;
+        default:
+            return true;
     }
-    return true;
 }
 
 static void runtimeError(const char *format, ...) {
@@ -74,20 +76,11 @@ InterpretResult execute() {
                 return RUNTIME_ERROR; \
             }                                       \
                                                     \
-            if(!IS_FLOAT(peek(0)) && !IS_FLOAT(peek(1))){      \
+            if(!IS_FLOAT(peek(0)) && !IS_FLOAT(peek(1))){           \
                 int64_t b,a;                        \
                                                     \
-                if(IS_BOOL(peek(0))){                   \
-                    b = pop().as.boolean;\
-                }else{                              \
-                    b = pop().as.integer; \
-                }                                   \
-                                                    \
-                if(IS_BOOL(peek(0))){                   \
-                    a = pop().as.boolean;\
-                }else{                              \
-                    a = pop().as.integer; \
-                }                                   \
+                b = pop().as.integer;                               \
+                a = pop().as.integer;\
                                                     \
                 if(castBool)                                    \
                     push(BOOL_CAST((a operator b))); \
@@ -95,17 +88,14 @@ InterpretResult execute() {
                     push(INTEGER_CAST(a operator b));\
             }else{                                  \
                 double b,a;\
-                if(IS_BOOL(peek(0))){                   \
-                    b = pop().as.boolean;           \
-                }else if(IS_INTEGER(peek(0))){       \
+                                                                    \
+                if(IS_INTEGER(peek(0))){       \
                     b = (double)pop().as.integer;           \
                 }else{\
                     b = pop().as.floatingPoint; \
                 }                                   \
                                                     \
-                if(IS_BOOL(peek(0))){                   \
-                    a = pop().as.boolean;           \
-                }else if(IS_INTEGER(peek(0))){       \
+                if(IS_INTEGER(peek(0))){       \
                     a = (double)pop().as.integer;           \
                 }else{\
                     a = pop().as.floatingPoint; \
@@ -127,19 +117,10 @@ InterpretResult execute() {
             }                                       \
                                                     \
             if(!IS_FLOAT(peek(0)) && !IS_FLOAT(peek(1))){      \
-                int64_t b,a;                        \
-                                                    \
-                if(IS_BOOL(peek(0))){                   \
-                    b = pop().as.boolean;\
-                }else{                              \
-                    b = pop().as.integer; \
-                }                                   \
-                                                    \
-                if(IS_BOOL(peek(0))){                   \
-                    a = pop().as.boolean;\
-                }else{                              \
-                    a = pop().as.integer; \
-                }                                   \
+                int64_t b,a;                                       \
+                                                                   \
+                b = pop().as.integer;\
+                a = pop().as.integer;       \
                                                     \
                 if(castBool)                                    \
                     push(BOOL_CAST(function(a, b))); \
@@ -147,17 +128,14 @@ InterpretResult execute() {
                     push(INTEGER_CAST(function(a, b)));\
             }else{                                  \
                 double b,a;\
-                if(IS_BOOL(peek(0))){                   \
-                    b = pop().as.boolean;           \
-                }else if(IS_INTEGER(peek(0))){       \
+                                                                   \
+                if(IS_INTEGER(peek(0))){       \
                     b = (double)pop().as.integer;           \
                 }else{\
                     b = pop().as.floatingPoint; \
                 }                                   \
                                                     \
-                if(IS_BOOL(peek(0))){                   \
-                    a = pop().as.boolean;           \
-                }else if(IS_INTEGER(peek(0))){       \
+                if(IS_INTEGER(peek(0))){       \
                     a = (double)pop().as.integer;           \
                 }else{\
                     a = pop().as.floatingPoint; \
@@ -217,8 +195,7 @@ InterpretResult execute() {
                 break;
             case OP_DIVIDE:
                 if ((IS_INTEGER(peek(0)) && peek(0).as.integer == 0) ||
-                    (IS_FLOAT(peek(0)) && peek(0).as.floatingPoint == 0.0) ||
-                    (IS_BOOL(peek(0)) && peek(0).as.boolean == false)) {
+                    (IS_FLOAT(peek(0)) && peek(0).as.floatingPoint == 0.0)) {
                     runtimeError("division by zero.");
                     return RUNTIME_ERROR;
                 }
@@ -232,7 +209,7 @@ InterpretResult execute() {
                 BINARY_INTEGER_OPERATION(%, "%");
                 break;
             case OP_POW:
-                BINARY_NUMBER_FUNCTION(false, pow, "^");
+                BINARY_NUMBER_FUNCTION(false, pow, "**");
                 break;
             case OP_PRINT:
                 printValue(pop());
@@ -257,22 +234,12 @@ InterpretResult execute() {
                     push(BOOL_CAST(pop().as.floatingPoint == pop().as.floatingPoint));
                 } else if (IS_INTEGER(peek(0)) && IS_INTEGER(peek(1))) {
                     push(BOOL_CAST(pop().as.integer == pop().as.integer));
-                } else if (IS_BOOL(peek(0)) && IS_BOOL(peek(1))) {
-                    push(BOOL_CAST(pop().as.boolean == pop().as.boolean));
                 } else if (IS_NIL(peek(0)) && IS_NIL(peek(1))) {
                     push(BOOL_CAST(true));
                 } else if (IS_FLOAT(peek(0)) && IS_INTEGER(peek(1))) {
                     push(BOOL_CAST(pop().as.floatingPoint == pop().as.integer));
                 } else if (IS_INTEGER(peek(0)) && IS_FLOAT(peek(1))) {
                     push(BOOL_CAST(pop().as.integer == pop().as.floatingPoint));
-                } else if (IS_BOOL(peek(0)) && IS_INTEGER(peek(1))) {
-                    push(BOOL_CAST(pop().as.boolean == pop().as.integer));
-                } else if (IS_INTEGER(peek(0)) && IS_BOOL(peek(1))) {
-                    push(BOOL_CAST(pop().as.integer == pop().as.boolean));
-                } else if (IS_BOOL(peek(0)) && IS_FLOAT(peek(1))) {
-                    push(BOOL_CAST(pop().as.boolean == pop().as.floatingPoint));
-                } else if (IS_FLOAT(peek(0)) && IS_BOOL(peek(1))) {
-                    push(BOOL_CAST(pop().as.floatingPoint == pop().as.boolean));
                 } else {
                     push(BOOL_CAST(false));
                 }
@@ -282,8 +249,6 @@ InterpretResult execute() {
                     push(INTEGER_CAST(-pop().as.integer));
                 } else if (IS_FLOAT(peek(0))) {
                     push(FLOAT_CAST(-pop().as.floatingPoint));
-                } else if (IS_BOOL(peek(0))) {
-                    push(INTEGER_CAST(-pop().as.boolean));
                 } else {
                     runtimeError("unsupported operand type for %s: %s.", "-", typeToString(peek(0).type));
                     return RUNTIME_ERROR;
