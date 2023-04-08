@@ -244,6 +244,24 @@ InterpretResult execute() {
                     push(BOOL_CAST(false));
                 }
                 break;
+            case OP_AND:
+                if (!isTrue(peek(1)) || !isTrue(peek(0))) {
+                    popValues(2);
+                    push(BOOL_CAST(false));
+                } else {
+                    popValues(2);
+                    push(BOOL_CAST(true));
+                }
+                break;
+            case OP_OR:
+                if (isTrue(peek(1)) || isTrue(peek(0))) {
+                    popValues(2);
+                    push(BOOL_CAST(true));
+                } else {
+                    popValues(2);
+                    push(BOOL_CAST(false));
+                }
+                break;
             case OP_NEGATE:
                 if (IS_INTEGER(peek(0))) {
                     push(INTEGER_CAST(-pop().as.integer));
