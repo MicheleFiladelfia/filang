@@ -209,6 +209,21 @@ InterpretResult execute() {
             case OP_MULTIPLY:
                 BINARY_NUMBER_OPERATION(false, *, "*");
                 break;
+            case OP_MODULO:
+                if (!IS_INTEGER(peek(0)) || !IS_INTEGER(peek(1))) {
+                    runtimeError("unsupported operand type(s) for %%: %s and %s.", typeToString(peek(1).type),
+                                 typeToString(peek(0).type));
+                    return RUNTIME_ERROR;
+                }
+
+                if (peek(0).as.integer == 0) {
+                    runtimeError("division by zero.");
+                    return RUNTIME_ERROR;
+                }
+
+                Value b = pop(), a = pop();
+                push(INTEGER_CAST(a.as.integer % b.as.integer));
+                break;
             case OP_POW:
                 BINARY_NUMBER_FUNCTION(false, pow, "^");
                 break;

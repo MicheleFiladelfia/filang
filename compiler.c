@@ -22,7 +22,7 @@ typedef enum {
     PrecEquals,     // == !=
     PrecCompare,    // < > <= >=
     PrecTerm,       // + -
-    PrecFactor,     // * /
+    PrecFactor,     // * / %
     PrecPow,        // ^
     PrecUnary,      // - !
     PrecCall        // . ()
@@ -164,6 +164,9 @@ static void binary() {
         case TOKEN_SLASH:
             emitByte(OP_DIVIDE);
             break;
+        case TOKEN_PERCENT:
+            emitByte(OP_MODULO);
+            break;
         case TOKEN_POW:
             emitByte(OP_POW);
             break;
@@ -243,6 +246,7 @@ ParseRule parseRules[] = {
         [TOKEN_SEMICOLON]   =   {NULL, NULL, PrecNone},
         [TOKEN_SLASH]       =   {NULL, binary, PrecFactor},
         [TOKEN_STAR]        =   {NULL, binary, PrecFactor},
+        [TOKEN_PERCENT]     =   {NULL, binary, PrecFactor},
         [TOKEN_POW]         =   {NULL, binary, PrecPow},
         [TOKEN_AND]         =   {NULL, binary, PrecAnd},
         [TOKEN_OR]          =   {NULL, binary, PrecOr},
