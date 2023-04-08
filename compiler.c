@@ -321,5 +321,7 @@ bool compile(Chunk *chunk, const char *source) {
     expression();
     consume(TOKEN_SEMICOLON, "expected ';' after expression.");
 
+    emitByte(OP_RETURN);
+
     return !parser.hasError;
 }
