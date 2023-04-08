@@ -76,7 +76,7 @@ InterpretResult execute() {
                 return RUNTIME_ERROR; \
             }                                       \
                                                     \
-            if(!IS_FLOAT(peek(0)) && !IS_FLOAT(peek(1)) && strcmp(stringOperator,"/")){           \
+            if(!IS_FLOAT(peek(0)) && !IS_FLOAT(peek(1)) && strcmp(stringOperator,"/") != 0){           \
                 int64_t b,a;                        \
                                                     \
                 b = pop().as.integer;                               \
