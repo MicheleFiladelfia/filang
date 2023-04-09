@@ -29,7 +29,7 @@ void freeValueArray(ValueArray *array) {
 void printValue(Value value) {
     switch (value.type) {
         case VAL_BOOL:
-            printf(value.as.boolean == 0 ? "false" : "true");
+            printf(value.as.integer == 0 ? "false" : "true");
             break;
         case VAL_FLOAT:
             printf("%.15g", value.as.floatingPoint);

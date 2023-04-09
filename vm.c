@@ -41,7 +41,7 @@ static Value peek(int count) {
 static bool isTrue(Value value) {
     switch (value.type) {
         case VAL_BOOL:
-            return value.as.boolean;
+            return value.as.integer != 0;
         case VAL_NIL:
             return false;
         case VAL_INTEGER:

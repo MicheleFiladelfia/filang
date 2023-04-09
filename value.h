@@ -21,7 +21,6 @@ typedef struct ObjString ObjString;
 typedef struct {
     ValueType type;
     union {
-        bool boolean;
         double floatingPoint;
         int64_t integer;
         Object *object;
@@ -58,7 +57,7 @@ struct ObjString{
 #define IS_NIL(value) ((value).type == VAL_NIL)
 
 #define OBJECT_CAST(value) ((Value){VAL_OBJECT, {.object = (Object *) (value)}})
-#define BOOL_CAST(value) ((value) ? (Value){VAL_BOOL, {.boolean = true}} : (Value){VAL_BOOL, {.boolean = false}})
+#define BOOL_CAST(value) ((value) ? (Value){VAL_BOOL, {.integer = true}} : (Value){VAL_BOOL, {.integer = false}})
 #define FLOAT_CAST(value) ((Value){VAL_FLOAT, {.floatingPoint = (double) value}})
 #define INTEGER_CAST(value) ((Value){VAL_INTEGER, {.integer = (int64_t) value}})
 #define NIL ((Value){VAL_NIL, {.integer = 0}})
