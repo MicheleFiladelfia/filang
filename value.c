@@ -2,6 +2,7 @@
 #include "memory.h"
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 
 
 void initValueArray(ValueArray *array) {
@@ -39,18 +40,47 @@ void printValue(Value value) {
         case VAL_NIL:
             printf("nil");
             break;
+        case VAL_OBJECT:
+            if(IS_STRING(value))
+                printf("%s", ((ObjString *) value.as.object)->chars);
+            else
+                printf("%s", typeToString(value));
+            break;
     }
 }
 
-char *typeToString(ValueType type) {
-    switch (type) {
+char *typeToString(Value value) {
+    switch (value.type) {
         case VAL_BOOL:
-            return "<primitive 'bool'>";
+            return "<builtin 'bool'>";
         case VAL_FLOAT:
-            return "<primitive 'float'>";
+            return "<builtin 'float'>";
         case VAL_INTEGER:
-            return "<primitive 'integer'>";
+            return "<builtin 'integer'>";
         case VAL_NIL:
-            return "<primitive 'nil'>";
+            return "<builtin 'nil'>";
+        case VAL_OBJECT:
+            if(IS_STRING(value))
+                return "<class 'String'>";
+            else
+                return "<class 'Object'>";
     }
+}
+
+
+ObjString* makeObjString(char* chars, int length) {
+    ObjString* string = ALLOCATE(ObjString, 1);
+    string->type = OBJ_STRING;
+    string->length = length;
+    string->chars = copyString(chars, length);
+    return string;
+}
+
+ObjString* concatenateStrings(ObjString* a, ObjString* b) {
+    int length = a->length + b->length;
+    char* chars = ALLOCATE(char, length + 1);
+    memcpy(chars, a->chars, a->length);
+    memcpy(chars + a->length, b->chars, b->length);
+    chars[length] = '\0';
+    return makeObjString(chars, length);
 }

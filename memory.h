@@ -4,8 +4,9 @@
 #include <stddef.h>
 
 void *reallocate(void *pointer, size_t oldSize, size_t newSize);
+char* copyString(char* chars, int length);
 
-#define allocate(type, count) (type*)reallocate(NULL, 0, sizeof(type)*count)
+#define ALLOCATE(type, count) (type*)reallocate(NULL, 0, sizeof(type)*count)
 
 #define GROW_ARRAY_CAPACITY(capacity) \
     ((capacity) < 8 ? 8 : (capacity) * 2)

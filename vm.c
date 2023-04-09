@@ -48,6 +48,11 @@ static bool isTrue(Value value) {
             return value.as.integer != 0;
         case VAL_FLOAT:
             return value.as.floatingPoint != 0;
+        case VAL_OBJECT:
+            if(IS_STRING(value))
+                return ((ObjString *) value.as.object)->length != 0;
+            else
+                return true;
         default:
             return true;
     }
@@ -72,7 +77,7 @@ InterpretResult execute() {
 #define BINARY_NUMBER_OPERATION(castBool, operator, stringOperator) \
         do{ \
             if(!IS_NUMERIC(peek(0))  || !IS_NUMERIC(peek(1))){ \
-                runtimeError("unsupported operand type(s) for %s: %s and %s.", stringOperator, typeToString(peek(1).type), typeToString(peek(0).type));                                    \
+                runtimeError("unsupported operand type(s) for %s: %s and %s.", stringOperator, typeToString(peek(1)), typeToString(peek(0))); \
                 return RUNTIME_ERROR; \
             }                                       \
                                                     \
@@ -112,7 +117,7 @@ InterpretResult execute() {
 #define BINARY_NUMBER_FUNCTION(castBool, function, stringFunction) \
         do{ \
             if(!IS_NUMERIC(peek(0))  || !IS_NUMERIC(peek(1))){ \
-                runtimeError("unsupported operand type(s) for %s: %s and %s.", stringFunction, typeToString(peek(1).type), typeToString(peek(0).type));                                    \
+                runtimeError("unsupported operand type(s) for %s: %s and %s.", stringFunction, typeToString(peek(1)), typeToString(peek(0)));                                    \
                 return RUNTIME_ERROR; \
             }                                       \
                                                     \
@@ -151,7 +156,7 @@ InterpretResult execute() {
 #define BINARY_INTEGER_OPERATION(operator, stringOperator) \
         do{ \
             if((!IS_BOOL(peek(0))  && !IS_INTEGER(peek(0))) || (!IS_BOOL(peek(1)) && !IS_INTEGER(peek(1)))){ \
-                runtimeError("unsupported operand type(s) for %s: %s and %s.", stringOperator, typeToString(peek(1).type), typeToString(peek(0).type));                                    \
+                runtimeError("unsupported operand type(s) for %s: %s and %s.", stringOperator, typeToString(peek(1)), typeToString(peek(0)));                                    \
                 return RUNTIME_ERROR; \
             }                                       \
                                                     \
@@ -188,6 +193,11 @@ InterpretResult execute() {
                 push(NIL);
                 break;
             case OP_ADD:
+                if(IS_STRING(peek(0)) && IS_STRING(peek(1))){
+                    push(OBJECT_CAST(concatenateStrings(AS_STRING(pop()), AS_STRING(pop()))));
+                    break;
+                }
+
                 BINARY_NUMBER_OPERATION(false, +, "+");
                 break;
             case OP_SUBTRACT:
@@ -268,7 +278,7 @@ InterpretResult execute() {
                 } else if (IS_FLOAT(peek(0))) {
                     push(FLOAT_CAST(-pop().as.floatingPoint));
                 } else {
-                    runtimeError("unsupported operand type for %s: %s.", "-", typeToString(peek(0).type));
+                    runtimeError("unsupported operand type for %s: %s.", "-", typeToString(peek(0)));
                     return RUNTIME_ERROR;
                 }
                 break;
@@ -297,7 +307,7 @@ InterpretResult execute() {
                 break;
             case OP_BW_NOT:
                 if (!IS_INTEGER(peek(0))) {
-                    runtimeError("unsupported operand type for ~: %s.", typeToString(peek(0).type));
+                    runtimeError("unsupported operand type for ~: %s.", typeToString(peek(0)));
                     return RUNTIME_ERROR;
                 }
 
@@ -336,5 +346,3 @@ InterpretResult interpret(const char *source) {
     freeChunk(&chunk);
     return result;
 }
-
-

@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "compiler.h"
+#include "memory.h"
 #include "scanner.h"
 
 typedef struct {
@@ -243,6 +244,10 @@ static void number() {
     }
 }
 
+static void string() {
+    emitConstant(OBJECT_CAST(makeObjString(parser.previous.start + 1, parser.previous.length - 2)));
+}
+
 static void boolean() {
     if (parser.previous.type == TOKEN_TRUE) {
         emitByte(OP_TRUE);
@@ -289,7 +294,7 @@ ParseRule parseRules[] = {
         [TOKEN_LESS]        =   {NULL, binary, PrecCompare},
         [TOKEN_LESS_EQUAL]  =   {NULL, binary, PrecCompare},
         [TOKEN_IDENTIFIER]  =   {NULL, NULL, PrecNone},
-        [TOKEN_STRING]      =   {NULL, NULL, PrecNone},
+        [TOKEN_STRING]      =   {string, NULL, PrecNone},
         [TOKEN_INTEGER]      =   {number, NULL, PrecNone},
         [TOKEN_FLOAT]      =   {number, NULL, PrecNone},
         [TOKEN_RETURN]      =   {NULL, NULL, PrecNone},
