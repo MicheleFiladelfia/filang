@@ -14,10 +14,11 @@ static void resetStack() {
 
 void initVM() {
     resetStack();
+    initHashMap(&vm.strings);
 }
 
 void freeVM() {
-
+    freeHashMap(&vm.strings);
 }
 
 static void push(Value value) {
@@ -49,7 +50,7 @@ static bool isTrue(Value value) {
         case VAL_FLOAT:
             return value.as.floatingPoint != 0;
         case VAL_OBJECT:
-            if(IS_STRING(value))
+            if (IS_STRING(value))
                 return ((ObjString *) value.as.object)->length != 0;
             else
                 return true;
@@ -193,7 +194,7 @@ InterpretResult execute() {
                 push(NIL);
                 break;
             case OP_ADD:
-                if(IS_STRING(peek(0)) && IS_STRING(peek(1))){
+                if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
                     push(OBJECT_CAST(concatenateStrings(AS_STRING(pop()), AS_STRING(pop()))));
                     break;
                 }
@@ -250,6 +251,8 @@ InterpretResult execute() {
                     push(BOOL_CAST(pop().as.floatingPoint == pop().as.integer));
                 } else if (IS_INTEGER(peek(0)) && IS_FLOAT(peek(1))) {
                     push(BOOL_CAST(pop().as.integer == pop().as.floatingPoint));
+                } else if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
+                    push(BOOL_CAST(AS_STRING(peek(0)) == AS_STRING(peek(1))));
                 } else {
                     push(BOOL_CAST(false));
                 }

@@ -2,9 +2,11 @@
 #define FILANG_MEMORY_H
 
 #include <stddef.h>
+#include "value.h"
 
 void *reallocate(void *pointer, size_t oldSize, size_t newSize);
-char* copyString(char* chars, int length);
+
+char *copyString(char *chars, int length);
 
 #define ALLOCATE(type, count) (type*)reallocate(NULL, 0, sizeof(type)*count)
 

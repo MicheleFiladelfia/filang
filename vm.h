@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "chunk.h"
+#include "hashmap.h"
 
 typedef enum {
     NO_ERRORS,
@@ -16,8 +17,10 @@ typedef struct {
     uint8_t *ip;
     Value stack[256];
     Value *stackTop;
+    HashMap strings;
 } VM;
 
+extern VM vm;
 
 void initVM();
 

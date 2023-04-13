@@ -1,4 +1,3 @@
-#include <malloc.h>
 #include <stdlib.h>
 #include <string.h>
 #include "memory.h"
@@ -17,8 +16,8 @@ void *reallocate(void *pointer, size_t oldSize, size_t newSize) {
     return allocatedMemory;
 }
 
-char* copyString(char* chars, int length) {
-    char* heapChars = ALLOCATE(char, length + 1);
+char *copyString(char *chars, int length) {
+    char *heapChars = ALLOCATE(char, length + 1);
     memcpy(heapChars, chars, length);
     heapChars[length] = '\0';
     return heapChars;

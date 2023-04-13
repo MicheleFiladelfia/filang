@@ -37,14 +37,15 @@ typedef enum {
     OBJ_STRING
 } Objtype;
 
-struct Object{
+struct Object {
     Objtype type;
 };
 
-struct ObjString{
+struct ObjString {
     Objtype type;
     int length;
     char *chars;
+    uint32_t hash;
 };
 
 
@@ -75,8 +76,8 @@ void freeValueArray(ValueArray *array);
 
 char *typeToString(Value type);
 
-ObjString* makeObjString(char* chars, int length);
+ObjString *makeObjString(char *chars, int length);
 
-ObjString* concatenateStrings(ObjString* a, ObjString* b);
+ObjString *concatenateStrings(ObjString *a, ObjString *b);
 
 #endif //FILANG_VALUE_H

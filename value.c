@@ -1,5 +1,7 @@
 #include "value.h"
 #include "memory.h"
+#include "hashmap.h"
+#include "vm.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -41,7 +43,7 @@ void printValue(Value value) {
             printf("nil");
             break;
         case VAL_OBJECT:
-            if(IS_STRING(value))
+            if (IS_STRING(value))
                 printf("%s", ((ObjString *) value.as.object)->chars);
             else
                 printf("%s", typeToString(value));
@@ -60,7 +62,7 @@ char *typeToString(Value value) {
         case VAL_NIL:
             return "<builtin 'nil'>";
         case VAL_OBJECT:
-            if(IS_STRING(value))
+            if (IS_STRING(value))
                 return "<class 'String'>";
             else
                 return "<class 'Object'>";
@@ -68,17 +70,24 @@ char *typeToString(Value value) {
 }
 
 
-ObjString* makeObjString(char* chars, int length) {
-    ObjString* string = ALLOCATE(ObjString, 1);
+ObjString *makeObjString(char *chars, int length) {
+    uint32_t hash = hashString(chars, length);
+    ObjString *interned = getStringEntry(&vm.strings, chars, length, hash);
+    if (interned != NULL) return interned;
+
+    ObjString *string = ALLOCATE(ObjString, 1);
     string->type = OBJ_STRING;
     string->length = length;
     string->chars = copyString(chars, length);
+    string->hash = hash;
+
+    addEntry(&vm.strings, string, NIL);
     return string;
 }
 
-ObjString* concatenateStrings(ObjString* a, ObjString* b) {
+ObjString *concatenateStrings(ObjString *a, ObjString *b) {
     int length = a->length + b->length;
-    char* chars = ALLOCATE(char, length + 1);
+    char *chars = ALLOCATE(char, length + 1);
     memcpy(chars, a->chars, a->length);
     memcpy(chars + a->length, b->chars, b->length);
     chars[length] = '\0';
