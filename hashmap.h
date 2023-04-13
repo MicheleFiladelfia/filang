@@ -25,13 +25,15 @@ uint32_t hashString(const char *key, int length);
 
 void initHashMap(HashMap *map);
 
+void freeHashMap(HashMap *map);
+
 void addEntry(HashMap *map, ObjString *key, Value value);
 
 Value getEntry(HashMap *map, ObjString *key);
 
-void erase(HashMap *map, ObjString *key);
+void eraseEntry(HashMap *map, ObjString *key);
 
-void freeHashMap(HashMap *map);
+bool contains(HashMap *map, ObjString *key);
 
 ObjString *getStringEntry(HashMap *map, const char *key, int length, uint32_t hash);
 

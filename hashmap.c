@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <string.h>
 #include "hashmap.h"
 #include "memory.h"
@@ -56,7 +55,7 @@ static void removeByIndex(HashMap *map, uint32_t index) {
     }
 }
 
-void erase(HashMap *map, ObjString *key) {
+void eraseEntry(HashMap *map, ObjString *key) {
     if (map->count == 0) return;
     uint32_t index = key->hash & (map->capacity - 1);
 

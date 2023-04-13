@@ -124,6 +124,15 @@ static void parsePrecedence(ParsePrec precedence) {
     }
 }
 
+
+static bool match(TokenType expectedType) {
+    if (parser.current.type == expectedType) {
+        advance();
+        return true;
+    }
+    return false;
+}
+
 static void expression() {
     parsePrecedence(PrecAssignment);
 }
@@ -131,6 +140,14 @@ static void expression() {
 static void print() {
     parsePrecedence(PrecNone + 1);
     emitByte(OP_PRINT);
+}
+
+static void statement(){
+    if(match(TOKEN_PRINT)){
+        print();
+    } else {
+        expression();
+    }
 }
 
 static void unary() {
@@ -277,7 +294,7 @@ ParseRule parseRules[] = {
         [TOKEN_AND]         =   {NULL, binary, PrecAnd},
         [TOKEN_OR]          =   {NULL, binary, PrecOr},
         [TOKEN_NOT]        =   {unary, NULL, PrecUnary},
-        [TOKEN_PRINT]       =   {print, NULL, PrecNone},
+        [TOKEN_PRINT]       =   {NULL, NULL, PrecNone},
         [TOKEN_COLONS]      =   {NULL, NULL, PrecNone},
         [TOKEN_AMPERSAND]   =   {NULL, binary, PrecBWAnd},
         [TOKEN_PIPE]        =   {NULL, binary, PrecBWOr},
@@ -323,8 +340,10 @@ bool compile(Chunk *chunk, const char *source) {
     parser.panicMode = false;
 
     advance();
-    expression();
-    consume(TOKEN_SEMICOLON, "expected ';' after expression.");
+    while (!match(TOKEN_EOF)) {
+        statement();
+        consume(TOKEN_SEMICOLON, "expected ';' after expression.");
+    }
 
     emitByte(OP_RETURN);
 

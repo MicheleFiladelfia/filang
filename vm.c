@@ -75,105 +75,109 @@ InterpretResult execute() {
 #define READ_BYTE() (*vm.ip++)
 #define NEXT_BYTE() (*(vm.ip))
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
-#define BINARY_NUMBER_OPERATION(castBool, operator, stringOperator) \
-        do{ \
-            if(!IS_NUMERIC(peek(0))  || !IS_NUMERIC(peek(1))){ \
-                runtimeError("unsupported operand type(s) for %s: %s and %s.", stringOperator, typeToString(peek(1)), typeToString(peek(0))); \
-                return RUNTIME_ERROR; \
-            }                                       \
-                                                    \
-            if(!IS_FLOAT(peek(0)) && !IS_FLOAT(peek(1)) && strcmp(stringOperator,"/") != 0){           \
-                int64_t b,a;                        \
-                                                    \
-                b = pop().as.integer;                               \
-                a = pop().as.integer;\
-                                                    \
-                if(castBool)                                    \
-                    push(BOOL_CAST((a operator b))); \
-                else                                \
-                    push(INTEGER_CAST(a operator b));\
-            }else{                                  \
-                double b,a;\
-                                                                    \
-                if(IS_INTEGER(peek(0))){       \
-                    b = (double)pop().as.integer;           \
-                }else{\
-                    b = pop().as.floatingPoint; \
-                }                                   \
-                                                    \
-                if(IS_INTEGER(peek(0))){       \
-                    a = (double)pop().as.integer;           \
-                }else{\
-                    a = pop().as.floatingPoint; \
-                }                                      \
-                                                    \
-                if(castBool)                                    \
-                    push(BOOL_CAST(a operator b)); \
-                else                                \
-                    push(FLOAT_CAST(a operator b));\
-            }\
-        }while(false)
+#define BINARY_NUMBER_OPERATION(castBool, operator, stringOperator)                                                                       \
+    do {                                                                                                                                  \
+        if (!IS_NUMERIC(peek(0)) || !IS_NUMERIC(peek(1))) {                                                                               \
+            runtimeError("unsupported operand type(s) for %s: %s and %s.", stringOperator, typeToString(peek(1)), typeToString(peek(0))); \
+            return RUNTIME_ERROR;                                                                                                         \
+        }                                                                                                                                 \
+                                                                                                                                          \
+        if (!IS_FLOAT(peek(0)) && !IS_FLOAT(peek(1)) && strcmp(stringOperator, "/") != 0) {                                               \
+            int64_t b, a;                                                                                                                 \
+                                                                                                                                          \
+            b = pop().as.integer;                                                                                                         \
+            a = pop().as.integer;                                                                                                         \
+                                                                                                                                          \
+            if (castBool)                                                                                                                 \
+                push(BOOL_CAST((a operator b)));                                                                                          \
+            else                                                                                                                          \
+                push(INTEGER_CAST(a operator b));                                                                                         \
+        }                                                                                                                                 \
+        else {                                                                                                                            \
+            double b, a;                                                                                                                  \
+                                                                                                                                          \
+            if (IS_INTEGER(peek(0))) {                                                                                                    \
+                b = (double)pop().as.integer;                                                                                             \
+            }                                                                                                                             \
+            else {                                                                                                                        \
+                b = pop().as.floatingPoint;                                                                                               \
+            }                                                                                                                             \
+                                                                                                                                          \
+            if (IS_INTEGER(peek(0))) {                                                                                                    \
+                a = (double)pop().as.integer;                                                                                             \
+            }                                                                                                                             \
+            else {                                                                                                                        \
+                a = pop().as.floatingPoint;                                                                                               \
+            }                                                                                                                             \
+                                                                                                                                          \
+            if (castBool)                                                                                                                 \
+                push(BOOL_CAST(a operator b));                                                                                            \
+            else                                                                                                                          \
+                push(FLOAT_CAST(a operator b));                                                                                           \
+        }                                                                                                                                 \
+    } while (false)
 
+#define BINARY_NUMBER_FUNCTION(castBool, function, stringFunction)                                                                        \
+    do {                                                                                                                                  \
+        if (!IS_NUMERIC(peek(0)) || !IS_NUMERIC(peek(1))) {                                                                               \
+            runtimeError("unsupported operand type(s) for %s: %s and %s.", stringFunction, typeToString(peek(1)), typeToString(peek(0))); \
+            return RUNTIME_ERROR;                                                                                                         \
+        }                                                                                                                                 \
+                                                                                                                                          \
+        if (!IS_FLOAT(peek(0)) && !IS_FLOAT(peek(1))) {                                                                                   \
+            int64_t b, a;                                                                                                                 \
+                                                                                                                                          \
+            b = pop().as.integer;                                                                                                         \
+            a = pop().as.integer;                                                                                                         \
+                                                                                                                                          \
+            if (castBool)                                                                                                                 \
+                push(BOOL_CAST(function(a, b)));                                                                                          \
+            else                                                                                                                          \
+                push(INTEGER_CAST(function(a, b)));                                                                                       \
+        }                                                                                                                                 \
+        else {                                                                                                                            \
+            double b, a;                                                                                                                  \
+                                                                                                                                          \
+            if (IS_INTEGER(peek(0))) {                                                                                                    \
+                b = (double)pop().as.integer;                                                                                             \
+            }                                                                                                                             \
+            else {                                                                                                                        \
+                b = pop().as.floatingPoint;                                                                                               \
+            }                                                                                                                             \
+                                                                                                                                          \
+            if (IS_INTEGER(peek(0))) {                                                                                                    \
+                a = (double)pop().as.integer;                                                                                             \
+            }                                                                                                                             \
+            else {                                                                                                                        \
+                a = pop().as.floatingPoint;                                                                                               \
+            }                                                                                                                             \
+                                                                                                                                          \
+            if (castBool)                                                                                                                 \
+                push(BOOL_CAST(function(a, b)));                                                                                          \
+            else                                                                                                                          \
+                push(FLOAT_CAST(function(a, b)));                                                                                         \
+        }                                                                                                                                 \
+    } while (false)
 
-#define BINARY_NUMBER_FUNCTION(castBool, function, stringFunction) \
-        do{ \
-            if(!IS_NUMERIC(peek(0))  || !IS_NUMERIC(peek(1))){ \
-                runtimeError("unsupported operand type(s) for %s: %s and %s.", stringFunction, typeToString(peek(1)), typeToString(peek(0)));                                    \
-                return RUNTIME_ERROR; \
-            }                                       \
-                                                    \
-            if(!IS_FLOAT(peek(0)) && !IS_FLOAT(peek(1))){      \
-                int64_t b,a;                                       \
-                                                                   \
-                b = pop().as.integer;\
-                a = pop().as.integer;       \
-                                                    \
-                if(castBool)                                    \
-                    push(BOOL_CAST(function(a, b))); \
-                else                                \
-                    push(INTEGER_CAST(function(a, b)));\
-            }else{                                  \
-                double b,a;\
-                                                                   \
-                if(IS_INTEGER(peek(0))){       \
-                    b = (double)pop().as.integer;           \
-                }else{\
-                    b = pop().as.floatingPoint; \
-                }                                   \
-                                                    \
-                if(IS_INTEGER(peek(0))){       \
-                    a = (double)pop().as.integer;           \
-                }else{\
-                    a = pop().as.floatingPoint; \
-                }                                      \
-                                                    \
-                if(castBool)                                    \
-                    push(BOOL_CAST(function(a, b))); \
-                else                                \
-                    push(FLOAT_CAST(function(a, b)));\
-            }\
-        }while(false)
-
-#define BINARY_INTEGER_OPERATION(operator, stringOperator) \
-        do{ \
-            if((!IS_BOOL(peek(0))  && !IS_INTEGER(peek(0))) || (!IS_BOOL(peek(1)) && !IS_INTEGER(peek(1)))){ \
-                runtimeError("unsupported operand type(s) for %s: %s and %s.", stringOperator, typeToString(peek(1)), typeToString(peek(0)));                                    \
-                return RUNTIME_ERROR; \
-            }                                       \
-                                                    \
-            if(strcmp(stringOperator,"%") == 0){              \
-                if(peek(0).as.integer == 0){    \
-                    runtimeError("division by zero."); \
-                    return RUNTIME_ERROR;           \
-                }                                   \
-\
-            }                                       \
-                                                    \
-            int64_t b = pop().as.integer;           \
-            int64_t a = pop().as.integer;\
-                                                    \
-            push(INTEGER_CAST(a operator b));       \
-        }while(false)
+#define BINARY_INTEGER_OPERATION(operator, stringOperator)                                                                                \
+    do {                                                                                                                                  \
+        if ((!IS_BOOL(peek(0)) && !IS_INTEGER(peek(0))) || (!IS_BOOL(peek(1)) && !IS_INTEGER(peek(1)))) {                                 \
+            runtimeError("unsupported operand type(s) for %s: %s and %s.", stringOperator, typeToString(peek(1)), typeToString(peek(0))); \
+            return RUNTIME_ERROR;                                                                                                         \
+        }                                                                                                                                 \
+                                                                                                                                          \
+        if (strcmp(stringOperator, "%") == 0) {                                                                                           \
+            if (peek(0).as.integer == 0) {                                                                                                \
+                runtimeError("division by zero.");                                                                                        \
+                return RUNTIME_ERROR;                                                                                                     \
+            }                                                                                                                             \
+        }                                                                                                                                 \
+                                                                                                                                          \
+        int64_t b = pop().as.integer;                                                                                                     \
+        int64_t a = pop().as.integer;                                                                                                     \
+                                                                                                                                          \
+        push(INTEGER_CAST(a operator b));                                                                                                 \
+    } while (false)
 
     for (;;) {
         uint8_t instruction;
