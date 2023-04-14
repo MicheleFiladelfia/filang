@@ -75,6 +75,7 @@ InterpretResult execute() {
 #define READ_BYTE() (*vm.ip++)
 #define NEXT_BYTE() (*(vm.ip))
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+#define READ_STRING() AS_STRING(READ_CONSTANT())
 #define BINARY_NUMBER_OPERATION(castBool, operator, stringOperator)                                                                       \
     do {                                                                                                                                  \
         if (!IS_NUMERIC(peek(0)) || !IS_NUMERIC(peek(1))) {                                                                               \
@@ -179,6 +180,7 @@ InterpretResult execute() {
         push(INTEGER_CAST(a operator b));                                                                                                 \
     } while (false)
 
+    ObjString *name;
     for (;;) {
         uint8_t instruction;
 
@@ -326,11 +328,42 @@ InterpretResult execute() {
             case OP_SHIFT_RIGHT:
                 BINARY_INTEGER_OPERATION(>>, ">>");
                 break;
-
+            case OP_POP:
+                pop();
+                break;
+            case OP_DEFINE_GLOBAL:
+                name = READ_STRING();
+                if (!contains(&vm.globals, name)) {
+                    addEntry(&vm.globals, name, pop());
+                } else {
+                    runtimeError("redefinition of variable '%s'.", name->chars);
+                    return RUNTIME_ERROR;
+                }
+                break;
+            case OP_GET_GLOBAL:
+                name = READ_STRING();
+                if (contains(&vm.globals, name)) {
+                    push(getEntry(&vm.globals, name));
+                } else {
+                    runtimeError("undefined variable: '%s'.", name->chars);
+                    return RUNTIME_ERROR;
+                }
+                break;
+            case OP_SET_GLOBAL:
+                name = READ_STRING();
+                if (contains(&vm.globals, name)) {
+                    eraseEntry(&vm.globals, name);
+                    addEntry(&vm.globals, name, peek(0));
+                } else {
+                    runtimeError("undefined variable: '%s'.", name->chars);
+                    return RUNTIME_ERROR;
+                }
+                break;
         }
     }
 #undef READ_BYTE
 #undef READ_CONSTANT
+#undef READ_STRING
 #undef NEXT_BYTE
 #undef BINARY_NUMBER_OPERATION
 #undef BINARY_NUMBER_FUNCTION

@@ -18,6 +18,7 @@ typedef struct {
     Value stack[256];
     Value *stackTop;
     HashMap strings;
+    HashMap globals;
 } VM;
 
 extern VM vm;
