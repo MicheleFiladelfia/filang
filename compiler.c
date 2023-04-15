@@ -53,7 +53,6 @@ static void compileError(Token *token, const char *message) {
     if (token->type == TOKEN_EOF) {
         fprintf(stderr, " at end");
     } else if (token->type == TOKEN_ERROR) {
-        fprintf(stderr, ", unexpected token");
     } else {
         fprintf(stderr, " at '%.*s'", token->length, token->start);
     }
@@ -157,7 +156,6 @@ static void parsePrecedence(ParsePrec precedence) {
 }
 
 
-
 static void expression() {
     parsePrecedence(PrecAssignment);
 }
@@ -167,7 +165,7 @@ static void print() {
     emitByte(OP_PRINT);
 }
 
-static void statement(){
+static void statement() {
     if (match(TOKEN_PRINT)) {
         print();
         consume(TOKEN_SEMICOLON, "expected ';' after print statement.");

@@ -1,5 +1,7 @@
 #include <string.h>
 #include <stdbool.h>
+#include <malloc.h>
+#include <ctype.h>
 #include "scanner.h"
 #include "token.h"
 
@@ -144,11 +146,14 @@ static bool match(char expected) {
     return true;
 }
 
-static Token errorToken(char *errorMessage) {
+static Token errorToken(char *errorMessage, const char *errorChar) {
     Token token;
-
-    token.start = scanner.start;
-    token.length = (int) strlen(errorMessage);
+    char *error = malloc(strlen(errorMessage) + strlen(errorChar) + 1);
+    strcpy(error, errorMessage);
+    strcat(error, errorChar);
+    strcat(error, "\0");
+    token.start = error;
+    token.length = (int) strlen(error);
     token.line = scanner.line;
     token.type = TOKEN_ERROR;
 
@@ -157,7 +162,7 @@ static Token errorToken(char *errorMessage) {
 
 static Token string() {
     while (peek() != '"') {
-        if (isAtEnd()) return errorToken("Unterminated string.");
+        if (isAtEnd()) return errorToken("Unterminated string.", "");
         if (peek() == '\n') scanner.line++;
         advance();
     }
@@ -247,7 +252,11 @@ Token scanToken() {
         case '"' :
             return string();
         default:
-            return errorToken("Unexpected character.");
+            if (isprint(c)) {
+                return errorToken("Unexpected character: ", (char[4]) {'\'', c, '\'', '.'});
+            }
+
+            return errorToken("Unexpected character.", "");
     }
 }
 
