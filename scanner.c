@@ -160,8 +160,8 @@ static Token errorToken(char *errorMessage, const char *errorChar) {
     return token;
 }
 
-static Token string() {
-    while (peek() != '"') {
+static Token string(char endChar) {
+    while (peek() != endChar) {
         if (isAtEnd()) return errorToken("Unterminated string.", "");
         if (peek() == '\n') scanner.line++;
         advance();
@@ -250,7 +250,8 @@ Token scanToken() {
         case '~':
             return makeToken(TOKEN_TILDE);
         case '"' :
-            return string();
+        case '\'':
+            return string(c);
         default:
             if (isprint(c)) {
                 return errorToken("Unexpected character: ", (char[4]) {'\'', c, '\'', '.'});
