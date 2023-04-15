@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <signal.h>
 #include "scanner.h"
 #include "vm.h"
 
@@ -31,10 +32,24 @@ static char *readFromFile(char *fileName) {
     return buffer;
 }
 
+volatile bool shouldRun = true;
+
+void signalHandler(int) {
+    shouldRun = false;
+    printf("\nCaught Ctrl+C, terminated.");
+}
+
+struct sigaction sa = { .sa_handler = signalHandler };
+
 static void repl() {
     char line[1024];
 
-    while (true) {
+    if (sigaction(SIGINT, &sa, 0) != 0) {
+        fprintf(stderr, "Could not set signal handler.");
+        exit(1);
+    }
+
+    while (shouldRun) {
         printf("fi>> ");
 
         if (!fgets(line, sizeof(line), stdin)) {
