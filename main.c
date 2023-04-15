@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <string.h>
 #include <signal.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 #include "scanner.h"
 #include "vm.h"
 
@@ -32,33 +34,26 @@ static char *readFromFile(char *fileName) {
     return buffer;
 }
 
-volatile bool shouldRun = true;
-
 void signalHandler(int) {
-    shouldRun = false;
     printf("\nCaught Ctrl+C, terminated.");
+    exit(0);
 }
 
-struct sigaction sa = { .sa_handler = signalHandler };
-
 static void repl() {
-    char line[1024];
-
-    if (sigaction(SIGINT, &sa, 0) != 0) {
-        fprintf(stderr, "Could not set signal handler.");
+    if (signal(SIGINT, signalHandler) == SIG_ERR) {
+        fprintf(stderr, "Could not register signal handler");
         exit(1);
     }
 
-    while (shouldRun) {
-        printf("fi>> ");
+    while (true) {
+        char *line = readline("fi>> ");
 
-        if (!fgets(line, sizeof(line), stdin)) {
+        if(line == NULL) {
             printf("\n");
             break;
         }
 
-        if (strcmp(line, "\n") == 0) continue;
-
+        add_history(line);
 
         interpret(line);
     }
@@ -66,7 +61,6 @@ static void repl() {
 
 static void runFile(char *fileName) {
     char *sourceCode = readFromFile(fileName);
-
 
     initScanner(sourceCode);
 
