@@ -70,7 +70,7 @@ char *typeToString(Value value) {
 }
 
 
-ObjString *makeObjString(char *chars, int length) {
+ObjString *makeObjString(const char *chars, int length) {
     uint32_t hash = hashString(chars, length);
     ObjString *interned = getStringEntry(&vm.strings, chars, length, hash);
     if (interned != NULL) return interned;

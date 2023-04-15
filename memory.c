@@ -16,7 +16,7 @@ void *reallocate(void *pointer, size_t oldSize, size_t newSize) {
     return allocatedMemory;
 }
 
-char *copyString(char *chars, int length) {
+char *copyString(const char *chars, int length) {
     char *heapChars = ALLOCATE(char, length + 1);
     memcpy(heapChars, chars, length);
     heapChars[length] = '\0';

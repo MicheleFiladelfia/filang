@@ -1,6 +1,5 @@
 #include <string.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include "scanner.h"
 #include "token.h"
 
@@ -73,7 +72,7 @@ static Token makeToken(TokenType type) {
     token.type = type;
     token.start = scanner.start;
     token.line = scanner.line;
-    token.length = scanner.current - scanner.start;
+    token.length = (int) (scanner.current - scanner.start);
 
     return token;
 }
@@ -247,8 +246,8 @@ Token scanToken() {
             return makeToken(TOKEN_TILDE);
         case '"' :
             return string();
+        default:
+            return errorToken("Unexpected character.");
     }
-
-    return errorToken("Unexpected character.");
 }
 

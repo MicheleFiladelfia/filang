@@ -182,9 +182,7 @@ InterpretResult execute() {
 
     ObjString *name;
     for (;;) {
-        uint8_t instruction;
-
-        switch (instruction = READ_BYTE()) {
+        switch (READ_BYTE()) {
             case OP_RETURN:
                 return NO_ERRORS;
             case OP_CONSTANT:

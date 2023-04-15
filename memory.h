@@ -6,7 +6,7 @@
 
 void *reallocate(void *pointer, size_t oldSize, size_t newSize);
 
-char *copyString(char *chars, int length);
+char *copyString(const char *chars, int length);
 
 #define ALLOCATE(type, count) (type*)reallocate(NULL, 0, sizeof(type)*count)
 
@@ -18,8 +18,5 @@ char *copyString(char *chars, int length);
 
 #define FREE_ARRAY(array, type, oldCount) \
     reallocate(array, sizeof(type) * (oldCount), 0)
-
-#define FREE(array, type, oldCount) \
-    reallocate(array, sizeof(type), 0)
 
 #endif //FILANG_MEMORY_H
