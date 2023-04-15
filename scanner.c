@@ -164,6 +164,7 @@ static Token string(char endChar) {
     while (peek() != endChar) {
         if (isAtEnd()) return errorToken("Unterminated string.", "");
         if (peek() == '\n') scanner.line++;
+        if (peek() == '\\') advance();
         advance();
     }
 

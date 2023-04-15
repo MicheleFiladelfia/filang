@@ -198,8 +198,8 @@ InterpretResult execute() {
                 push(NIL);
                 break;
             case OP_ADD:
-                if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
-                    push(OBJECT_CAST(concatenateStrings(AS_STRING(pop()), AS_STRING(pop()))));
+                if (IS_STRING(peek(0)) || IS_STRING(peek(1))) {
+                    push(OBJECT_CAST(concatenateStrings(toString(pop()), toString(pop()))));
                     break;
                 }
 

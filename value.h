@@ -76,6 +76,8 @@ void freeValueArray(ValueArray *array);
 
 char *typeToString(Value type);
 
+ObjString *toString(Value value);
+
 ObjString *makeObjString(const char *chars, int length);
 
 ObjString *concatenateStrings(ObjString *a, ObjString *b);

@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <string.h>
 
-
 void initValueArray(ValueArray *array) {
     array->values = NULL;
     array->capacity = 0;
@@ -69,6 +68,42 @@ char *typeToString(Value value) {
     }
 }
 
+static char *longToString(int64_t value) {
+    char *buffer = ALLOCATE(char, 20);
+    snprintf(buffer, 20, "%ld", value);
+    return buffer;
+}
+
+static char *doubleToString(double value) {
+    char *buffer = ALLOCATE(char, 20);
+    snprintf(buffer, 20, "%.15g", value);
+    return buffer;
+}
+
+ObjString *toString(Value value) {
+    char *valueAsString;
+    switch (value.type) {
+        case VAL_INTEGER:
+            valueAsString = longToString(value.as.integer);
+            return makeObjString(valueAsString, (int) strlen(valueAsString));
+        case VAL_FLOAT:
+            valueAsString = doubleToString(value.as.floatingPoint);
+            return makeObjString(valueAsString, (int) strlen(valueAsString));
+        case VAL_BOOL:
+            if (value.as.integer == 0) {
+                return makeObjString("false", 6);
+            } else {
+                return makeObjString("true", 5);
+            }
+        case VAL_NIL:
+            return makeObjString("nil", 4);
+        case VAL_OBJECT:
+            if (IS_STRING(value))
+                return ((ObjString *) value.as.object);
+            else
+                return makeObjString(typeToString(value), (int) strlen(typeToString(value)));
+    }
+}
 
 ObjString *makeObjString(const char *chars, int length) {
     uint32_t hash = hashString(chars, length);

@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "compiler.h"
 #include "memory.h"
 #include "scanner.h"
@@ -324,8 +325,72 @@ static void number(bool allowAssignment) {
     }
 }
 
+static void escapeString(char *chars, int *length) {
+#define escapeChar(r) chars[i] = r; memmove(chars + i + 1, chars + i + 2, *length - i - 1); (*length)--
+
+    for (int i = 0; i < *length - 1; i++) {
+        if (chars[i] == '\\') {
+            switch (chars[i + 1]) {
+                case 'n':
+                escapeChar('\n');
+                    break;
+                case 't':
+                escapeChar('\t');
+                    break;
+                case 'r':
+                escapeChar('\r');
+                    break;
+                case 'a':
+                escapeChar('\a');
+                    break;
+                case 'b':
+                escapeChar('\b');
+                    break;
+                case 'v':
+                escapeChar('\v');
+                    break;
+                case 'f':
+                escapeChar('\f');
+                    break;
+                case '\\':
+                escapeChar('\\');
+                    break;
+                case '\'':
+                escapeChar('\'');
+                    break;
+                case '\"':
+                escapeChar('\"');
+                    break;
+                case 'x':
+                    if (*length - i < 4) {
+                        errorAtPrevious("invalid escape sequence.");
+                    }
+
+                    char hex[3] = {chars[i + 2], chars[i + 3], '\0'};
+
+                    char *end;
+                    long hexValue = strtol(hex, &end, 16);
+
+                    if (*end != '\0') {
+                        errorAtPrevious("invalid escape sequence.");
+                    }
+
+                    chars[i] = (char) hexValue;
+                    memmove(chars + i + 1, chars + i + 4, *length - i - 3);
+                    (*length) -= 3;
+                    break;
+            }
+        }
+    }
+#undef replaceChar
+}
+
 static void string(bool allowAssignment) {
-    emitConstant(OBJECT_CAST(makeObjString(parser.previous.start + 1, parser.previous.length - 2)));
+    ObjString *string = makeObjString(parser.previous.start + 1, parser.previous.length - 2);
+
+    escapeString(string->chars, &string->length);
+
+    emitConstant(OBJECT_CAST(string));
 }
 
 static void boolean(bool allowAssignment) {
