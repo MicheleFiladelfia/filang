@@ -13,6 +13,7 @@ typedef enum {
 
 
 typedef struct {
+    bool repl;
     Chunk *chunk;
     uint8_t *ip;
     Value stack[256];

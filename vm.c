@@ -327,7 +327,12 @@ InterpretResult execute() {
                 BINARY_INTEGER_OPERATION(>>, ">>");
                 break;
             case OP_POP:
-                pop();
+                if (vm.repl) {
+                    printValue(pop());
+                    printf("\n");
+                } else {
+                    pop();
+                }
                 break;
             case OP_DEFINE_GLOBAL:
                 name = READ_STRING();

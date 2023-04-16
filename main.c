@@ -40,6 +40,7 @@ void signalHandler(int) {
 }
 
 static void repl() {
+    vm.repl = true;
     if (signal(SIGINT, signalHandler) == SIG_ERR) {
         fprintf(stderr, "Could not register signal handler");
         exit(1);
@@ -48,10 +49,7 @@ static void repl() {
     while (true) {
         char *line = readline("fi>> ");
 
-        if(line == NULL) {
-            printf("\n");
-            break;
-        }
+        if(line == NULL) break;
 
         add_history(line);
 
@@ -60,6 +58,7 @@ static void repl() {
 }
 
 static void runFile(char *fileName) {
+    vm.repl = false;
     char *sourceCode = readFromFile(fileName);
 
     initScanner(sourceCode);
