@@ -34,12 +34,21 @@ static char *readFromFile(char *fileName) {
     return buffer;
 }
 
-void signalHandler(int) {
+static void signalHandler(int) {
     printf("\nCaught Ctrl+C, terminated.");
     exit(0);
 }
 
+
+
+static void initializeReadline() {
+    rl_bind_key('\t', rl_insert);
+    using_history();
+}
+
 static void repl() {
+    initializeReadline();
+
     vm.repl = true;
     if (signal(SIGINT, signalHandler) == SIG_ERR) {
         fprintf(stderr, "Could not register signal handler");
@@ -54,6 +63,8 @@ static void repl() {
         add_history(line);
 
         interpret(line);
+
+        free(line);
     }
 }
 
