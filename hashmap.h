@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include "value.h"
 #include "value.h"
+#include "strings.h"
 
 /*
  * Robin Hood Hashmap implementation

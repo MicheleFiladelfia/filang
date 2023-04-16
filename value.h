@@ -16,7 +16,6 @@ typedef enum {
 
 
 typedef struct Object Object;
-typedef struct ObjString ObjString;
 
 typedef struct {
     ValueType type;
@@ -41,16 +40,8 @@ struct Object {
     Objtype type;
 };
 
-struct ObjString {
-    Objtype type;
-    int length;
-    char *chars;
-    uint32_t hash;
-};
-
 
 #define IS_OBJECT(value) ((value).type == VAL_OBJECT)
-#define IS_STRING(value) (IS_OBJECT(value) && ((Object *) (value).as.object)->type == OBJ_STRING)
 #define IS_BOOL(value) ((value).type == VAL_BOOL)
 #define IS_FLOAT(value) ((value).type == VAL_FLOAT)
 #define IS_INTEGER(value) (((value).type == VAL_INTEGER) || IS_BOOL(value))
@@ -64,7 +55,6 @@ struct ObjString {
 #define NIL ((Value){VAL_NIL, {.integer = 0}})
 
 #define AS_OBJECT(value) ((value).as.object)
-#define AS_STRING(value) ((ObjString *) AS_OBJECT(value))
 
 void printValue(Value value);
 
@@ -73,13 +63,5 @@ void writeValueArray(ValueArray *array, Value value);
 void initValueArray(ValueArray *array);
 
 void freeValueArray(ValueArray *array);
-
-char *typeToString(Value type);
-
-ObjString *toString(Value value);
-
-ObjString *makeObjString(const char *chars, int length);
-
-ObjString *concatenateStrings(ObjString *a, ObjString *b);
 
 #endif //FILANG_VALUE_H

@@ -5,6 +5,7 @@
 #include "vm.h"
 #include "chunk.h"
 #include "compiler.h"
+#include "strings.h"
 
 VM vm;
 

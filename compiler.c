@@ -4,6 +4,7 @@
 #include "compiler.h"
 #include "memory.h"
 #include "scanner.h"
+#include "strings.h"
 
 typedef struct {
     Token previous;

@@ -2,6 +2,7 @@
 #include "hashmap.h"
 #include "memory.h"
 #include "value.h"
+#include "strings.h"
 
 uint32_t hashString(const char *key, int length) {
     uint32_t hash = 2166136261u;

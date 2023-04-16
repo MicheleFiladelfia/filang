@@ -6,8 +6,6 @@
 
 void *reallocate(void *pointer, size_t oldSize, size_t newSize);
 
-char *copyString(const char *chars, int length);
-
 #define ALLOCATE(type, count) (type*)reallocate(NULL, 0, sizeof(type)*count)
 
 #define GROW_ARRAY_CAPACITY(capacity) \
