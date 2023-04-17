@@ -30,8 +30,8 @@ typedef enum {
     PrecShift,      // << >>
     PrecTerm,       // + -
     PrecFactor,     // * / %
-    PrecPow,        // **
     PrecUnary,      // - ! ~
+    PrecPow,        // **
     PrecCall        // . ()
 } ParsePrec;
 

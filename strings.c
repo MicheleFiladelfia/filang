@@ -37,14 +37,14 @@ char *typeToString(Value value) {
 }
 
 static char *longToString(int64_t value) {
-    char *buffer = ALLOCATE(char, 20);
-    snprintf(buffer, 20, "%ld", value);
+    char *buffer = ALLOCATE(char, 22);
+    snprintf(buffer, 22, "%ld", value);
     return buffer;
 }
 
 static char *doubleToString(double value) {
-    char *buffer = ALLOCATE(char, 20);
-    snprintf(buffer, 20, "%.15g", value);
+    char *buffer = ALLOCATE(char, 22);
+    snprintf(buffer, 22, "%.15g", value);
     return buffer;
 }
 
