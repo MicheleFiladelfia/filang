@@ -33,6 +33,8 @@ typedef enum {
     OP_TRUE,
     OP_FALSE,
     OP_CONSTANT,
+    OP_CONSTANT_LONG,
+    OP_CONSTANT_LONG_LONG,
     OP_POP,
     OP_DEFINE_GLOBAL,
     OP_GET_GLOBAL,

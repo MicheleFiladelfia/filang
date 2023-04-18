@@ -76,6 +76,8 @@ InterpretResult execute() {
 #define READ_BYTE() (*vm.ip++)
 #define NEXT_BYTE() (*(vm.ip))
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+#define READ_CONSTANT_LONG() (vm.chunk->constants.values[READ_BYTE() + (READ_BYTE()<<8)])
+#define READ_CONSTANT_LONG_LONG() (vm.chunk->constants.values[READ_BYTE() + (READ_BYTE()<<8) + (READ_BYTE()<<16)])
 #define READ_STRING() AS_STRING(READ_CONSTANT())
 #define BINARY_NUMBER_OPERATION(castBool, operator, stringOperator)                                                                       \
     do {                                                                                                                                  \
@@ -148,6 +150,12 @@ InterpretResult execute() {
             case OP_CONSTANT:
                 push(READ_CONSTANT());
                 break;
+            case OP_CONSTANT_LONG:
+                push(READ_CONSTANT_LONG());
+                break;
+            case OP_CONSTANT_LONG_LONG:
+                push(READ_CONSTANT_LONG_LONG());
+                break;
             case OP_TRUE:
                 push(BOOL_CAST(true));
                 break;
@@ -184,32 +192,33 @@ InterpretResult execute() {
                 BINARY_INTEGER_OPERATION(%, "%");
                 break;
             case OP_POW:
-                    if (!IS_NUMERIC(peek(0)) || !IS_NUMERIC(peek(1))) {
-                        runtimeError("unsupported operand type(s) for '**': %s and %s.", typeToString(peek(1)), typeToString(peek(0)));
-                        return RUNTIME_ERROR;
-                    }
+                if (!IS_NUMERIC(peek(0)) || !IS_NUMERIC(peek(1))) {
+                    runtimeError("unsupported operand type(s) for '**': %s and %s.", typeToString(peek(1)),
+                                 typeToString(peek(0)));
+                    return RUNTIME_ERROR;
+                }
 
-                    double b, a;
+                double b, a;
 
-                    if(IS_INTEGER(peek(0))) {
-                        b = (double)pop().as.integer;
-                    } else {
-                        b = pop().as.floatingPoint;
-                    }
+                if (IS_INTEGER(peek(0))) {
+                    b = (double) pop().as.integer;
+                } else {
+                    b = pop().as.floatingPoint;
+                }
 
-                    if(IS_INTEGER(peek(0))) {
-                        a = (double)pop().as.integer;
-                    } else {
-                        a = pop().as.floatingPoint;
-                    }
+                if (IS_INTEGER(peek(0))) {
+                    a = (double) pop().as.integer;
+                } else {
+                    a = pop().as.floatingPoint;
+                }
 
-                    double result = pow(a, b);
+                double result = pow(a, b);
 
-                    if(floor(result) == result) {
-                        push(INTEGER_CAST((int64_t)result));
-                    } else {
-                        push(FLOAT_CAST(result));
-                    }
+                if (floor(result) == result) {
+                    push(INTEGER_CAST((int64_t) result));
+                } else {
+                    push(FLOAT_CAST(result));
+                }
                 break;
             case OP_PRINT:
                 printValue(pop());
@@ -351,6 +360,8 @@ InterpretResult execute() {
     }
 #undef READ_BYTE
 #undef READ_CONSTANT
+#undef READ_CONSTANT_LONG
+#undef READ_CONSTANT_LONG_LONG
 #undef READ_STRING
 #undef NEXT_BYTE
 #undef BINARY_NUMBER_OPERATION

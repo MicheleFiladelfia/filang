@@ -40,7 +40,6 @@ static void signalHandler(int) {
 }
 
 
-
 static void initializeReadline() {
     rl_bind_key('\t', rl_insert);
     using_history();
@@ -58,7 +57,7 @@ static void repl() {
     while (true) {
         char *line = readline("fi>> ");
 
-        if(line == NULL) break;
+        if (line == NULL) break;
 
         add_history(line);
 

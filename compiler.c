@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 #include "compiler.h"
 #include "memory.h"
 #include "scanner.h"
@@ -74,14 +75,28 @@ static void emitByte(uint8_t byte) {
     writeChunk(compileChunk, byte, parser.previous.line);
 }
 
-static void emitBytes(uint8_t byte1, uint8_t byte2) {
-    emitByte(byte1);
-    emitByte(byte2);
+static void emitBytes(int count, ...) {
+    va_list args;
+    va_start(args, count);
+    for (int i = 0; i < count; i++) {
+        emitByte(va_arg(args, int));
+    }
+    va_end(args);
 }
 
-
 static void emitConstant(Value value) {
-    emitBytes(OP_CONSTANT, writeConstant(compileChunk, value));
+    int index = writeConstant(compileChunk, value);
+
+    if (index < 255) {
+        emitBytes(2, OP_CONSTANT, index);
+    } else if (index < 65535) {
+        emitBytes(3, OP_CONSTANT_LONG, index & 0xFF, (index >> 8) & 0xFF);
+    } else if (index < 16777215) {
+        emitBytes(4, OP_CONSTANT_LONG_LONG, index & 0xFF, (index >> 8) & 0xFF, (index >> 16) & 0xFF);
+    } else {
+        errorAtPrevious("Too many constants in one chunk.");
+        exit(1);
+    }
 }
 
 static void advance() {
@@ -189,7 +204,7 @@ static void varDefinition() {
         emitByte(OP_NIL);
     }
 
-    emitBytes(OP_DEFINE_GLOBAL, global);
+    emitBytes(2, OP_DEFINE_GLOBAL, global);
 }
 
 static void identifier(bool allowAssignment) {
@@ -198,9 +213,9 @@ static void identifier(bool allowAssignment) {
 
     if (match(TOKEN_EQUAL) && allowAssignment) {
         expression();
-        emitBytes(OP_SET_GLOBAL, con);
+        emitBytes(2, OP_SET_GLOBAL, con);
     } else {
-        emitBytes(OP_GET_GLOBAL, con);
+        emitBytes(2, OP_GET_GLOBAL, con);
     }
 }
 
@@ -269,19 +284,19 @@ static void binary(bool allowAssignment) {
             emitByte(OP_EQUALS);
             break;
         case TOKEN_BANG_EQUAL:
-            emitBytes(OP_EQUALS, OP_NOT);
+            emitBytes(2, OP_EQUALS, OP_NOT);
             break;
         case TOKEN_GREATER:
             emitByte(OP_GREATER);
             break;
         case TOKEN_GREATER_EQUAL:
-            emitBytes(OP_LESS, OP_NOT);
+            emitBytes(2, OP_LESS, OP_NOT);
             break;
         case TOKEN_LESS:
             emitByte(OP_LESS);
             break;
         case TOKEN_LESS_EQUAL:
-            emitBytes(OP_GREATER, OP_NOT);
+            emitBytes(2, OP_GREATER, OP_NOT);
             break;
         case TOKEN_AMPERSAND:
             emitByte(OP_BW_AND);
