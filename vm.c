@@ -40,6 +40,10 @@ static Value peek(int count) {
     return vm.stackTop[-1 - count];
 }
 
+static Value *peekPointer(int count) {
+    return vm.stackTop - 1 - count;
+}
+
 static bool isTrue(Value value) {
     switch (value.type) {
         case VAL_BOOL:
@@ -275,16 +279,16 @@ InterpretResult execute() {
                 break;
             case OP_NEGATE:
                 if (IS_INTEGER(peek(0))) {
-                    push(INTEGER_CAST(-pop().as.integer));
+                    *peekPointer(0) = INTEGER_CAST(-peek(0).as.integer);
                 } else if (IS_FLOAT(peek(0))) {
-                    push(FLOAT_CAST(-pop().as.floatingPoint));
+                    *peekPointer(0) = FLOAT_CAST(-peek(0).as.floatingPoint);
                 } else {
                     runtimeError("unsupported operand type for %s: %s.", "-", typeToString(peek(0)));
                     return RUNTIME_ERROR;
                 }
                 break;
             case OP_NOT:
-                push(BOOL_CAST(!isTrue(pop())));
+                *peekPointer(0) = BOOL_CAST(!isTrue(peek(0)));
                 break;
             case OP_TERNARY:
                 if (isTrue(peek(2))) {
@@ -312,7 +316,7 @@ InterpretResult execute() {
                     return RUNTIME_ERROR;
                 }
 
-                push(INTEGER_CAST(~pop().as.integer));
+                *peekPointer(0) = INTEGER_CAST(~peek(0).as.integer);
                 break;
             case OP_SHIFT_LEFT:
                 BINARY_INTEGER_OPERATION(<<, "<<");
