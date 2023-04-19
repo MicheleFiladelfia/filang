@@ -76,6 +76,7 @@ ObjString *makeObjString(const char *chars, int length) {
     string->type = OBJ_STRING;
     string->length = length;
     memcpy(string->chars, chars, length);
+    string->chars[length] = '\0';
     string->hash = hash;
 
     addEntry(&vm.strings, string, NIL);
