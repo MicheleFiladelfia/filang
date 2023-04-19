@@ -10,13 +10,7 @@
 #include "hashmap.h"
 #include "vm.h"
 #include <string.h>
-
-char *copyString(const char *chars, int length) {
-    char *heapChars = ALLOCATE(char, length + 1);
-    memcpy(heapChars, chars, length);
-    heapChars[length] = '\0';
-    return heapChars;
-}
+#include <malloc.h>
 
 char *typeToString(Value value) {
     switch (value.type) {
@@ -78,10 +72,10 @@ ObjString *makeObjString(const char *chars, int length) {
     ObjString *interned = getStringEntry(&vm.strings, chars, length, hash);
     if (interned != NULL) return interned;
 
-    ObjString *string = ALLOCATE(ObjString, 1);
+    ObjString *string = malloc(sizeof(ObjString) + sizeof(char) * (length + 1));
     string->type = OBJ_STRING;
     string->length = length;
-    string->chars = copyString(chars, length);
+    memcpy(string->chars, chars, length);
     string->hash = hash;
 
     addEntry(&vm.strings, string, NIL);

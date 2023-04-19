@@ -13,8 +13,8 @@
 typedef struct {
     Objtype type;
     int length;
-    char *chars;
     uint32_t hash;
+    char chars[];
 } ObjString;
 
 char *copyString(const char *chars, int length);
