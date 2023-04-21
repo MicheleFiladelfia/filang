@@ -1,7 +1,3 @@
-//
-// Created by michele on 16/04/23.
-//
-
 #include <stdio.h>
 #include <stddef.h>
 #include "value.h"

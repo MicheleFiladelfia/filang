@@ -42,10 +42,16 @@ typedef enum {
 } OpCode;
 
 typedef struct {
+    int count;
+    int capacity;
+    int *ends;
+} Lines;
+
+typedef struct {
     uint8_t *code;
     int count;
     int capacity;
-    int *lines;
+    Lines *lines;
     ValueArray constants;
 } Chunk;
 

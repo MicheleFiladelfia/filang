@@ -68,7 +68,14 @@ static void runtimeError(const char *format, ...) {
     va_list args;
     va_start(args, format);
     size_t instruction = vm.ip - vm.chunk->code - 1;
-    int line = vm.chunk->lines[instruction];
+
+    int line = 1;
+    for(int i = 0; i < vm.chunk->lines->count; i++)
+        if (vm.chunk->lines->ends[i] > instruction){
+            line = i+1;
+            break;
+        }
+
     fprintf(stderr, "[line %d] RuntimeError: ", line);
     vfprintf(stderr, format, args);
     fprintf(stderr, "\n");

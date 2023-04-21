@@ -1,7 +1,3 @@
-//
-// Created by michele on 16/04/23.
-//
-
 #ifndef FILANG_STRINGS_H
 #define FILANG_STRINGS_H
 
