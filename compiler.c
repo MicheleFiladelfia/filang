@@ -195,8 +195,8 @@ static void statement() {
 
 static void varDefinition() {
     consume(TOKEN_IDENTIFIER, "expected identifier after variable definition.");
-    uint8_t global = writeConstant(compileChunk,
-                                   OBJECT_CAST(makeObjString(parser.previous.start, parser.previous.length)));
+
+    Value name = OBJECT_CAST(makeObjString(parser.previous.start, parser.previous.length));
 
     if (match(TOKEN_EQUAL)) {
         expression();
@@ -204,18 +204,20 @@ static void varDefinition() {
         emitByte(OP_NIL);
     }
 
-    emitBytes(2, OP_DEFINE_GLOBAL, global);
+    emitByte(OP_DEFINE_GLOBAL);
+    emitConstant(name);
 }
 
 static void identifier(bool allowAssignment) {
-    uint8_t con = writeConstant(compileChunk,
-                                OBJECT_CAST(makeObjString(parser.previous.start, parser.previous.length)));
+    Value name = OBJECT_CAST(makeObjString(parser.previous.start, parser.previous.length));
 
     if (match(TOKEN_EQUAL) && allowAssignment) {
         expression();
-        emitBytes(2, OP_SET_GLOBAL, con);
+        emitByte(OP_SET_GLOBAL);
+        emitConstant(name);
     } else {
-        emitBytes(2, OP_GET_GLOBAL, con);
+        emitByte(OP_GET_GLOBAL);
+        emitConstant(name);
     }
 }
 

@@ -89,7 +89,25 @@ InterpretResult execute() {
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
 #define READ_CONSTANT_LONG() (vm.chunk->constants.values[READ_BYTE() + (READ_BYTE()<<8)])
 #define READ_CONSTANT_LONG_LONG() (vm.chunk->constants.values[READ_BYTE() + (READ_BYTE()<<8) + (READ_BYTE()<<16)])
-#define READ_STRING() AS_STRING(READ_CONSTANT())
+#define READ_STRING_BYTE() AS_STRING(READ_CONSTANT())
+#define READ_STRING_LONG() AS_STRING(READ_CONSTANT_LONG())
+#define READ_STRING_LONG_LONG() AS_STRING(READ_CONSTANT_LONG_LONG())
+#define READ_STRING(str)                                                                           \
+    switch (READ_BYTE()){                                                                          \
+        case OP_CONSTANT:                                                                          \
+            str = READ_STRING_BYTE();                                                              \
+            break;                                                                                 \
+        case OP_CONSTANT_LONG:                                                                     \
+            str = READ_STRING_LONG();                                                              \
+            break;                                                                                 \
+        case OP_CONSTANT_LONG_LONG:                                                                \
+            str = READ_STRING_LONG_LONG();                                                         \
+            break;                                                                                 \
+        default:                                                                                   \
+            runtimeError("An error occurred.");                                                    \
+            return RUNTIME_ERROR;                                                                  \
+    }
+
 #define BINARY_NUMBER_OPERATION(castBool, operator, stringOperator)                                                                       \
     do {                                                                                                                                  \
         if (!IS_NUMERIC(peek(0)) || !IS_NUMERIC(peek(1))) {                                                                               \
@@ -340,7 +358,8 @@ InterpretResult execute() {
                 }
                 break;
             case OP_DEFINE_GLOBAL:
-                name = READ_STRING();
+                READ_STRING(name);
+
                 if (!contains(&vm.globals, name)) {
                     addEntry(&vm.globals, name, pop());
                 } else {
@@ -349,7 +368,8 @@ InterpretResult execute() {
                 }
                 break;
             case OP_GET_GLOBAL:
-                name = READ_STRING();
+                READ_STRING(name);
+
                 if (contains(&vm.globals, name)) {
                     push(getEntry(&vm.globals, name));
                 } else {
@@ -358,7 +378,8 @@ InterpretResult execute() {
                 }
                 break;
             case OP_SET_GLOBAL:
-                name = READ_STRING();
+                READ_STRING(name);
+
                 if (contains(&vm.globals, name)) {
                     eraseEntry(&vm.globals, name);
                     addEntry(&vm.globals, name, peek(0));
@@ -373,6 +394,7 @@ InterpretResult execute() {
 #undef READ_CONSTANT
 #undef READ_CONSTANT_LONG
 #undef READ_CONSTANT_LONG_LONG
+#undef READ_STRING_BYTE
 #undef READ_STRING
 #undef NEXT_BYTE
 #undef BINARY_NUMBER_OPERATION
