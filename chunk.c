@@ -36,14 +36,9 @@ void writeChunk(Chunk *chunk, uint8_t byte, int line) {
             int oldCapacity = chunk->lines->capacity;
             chunk->lines->capacity = GROW_ARRAY_CAPACITY(chunk->lines->capacity);
             chunk->lines->ends = GROW_ARRAY(chunk->lines->ends, int, oldCapacity, chunk->lines->capacity);
-            memset(&chunk->lines->ends[oldCapacity], 0, sizeof(int) * (chunk->lines->capacity - oldCapacity));
+            memset(&chunk->lines->ends[oldCapacity], -1, sizeof(int) * (chunk->lines->capacity - oldCapacity));
          }
          chunk->lines->count++;
-    }
-
-    // if the previous line is empty, set it to the same value as the line before
-    if(chunk->lines->ends[line-2] == 0 && line > 1){
-        chunk->lines->ends[line-2] = chunk->lines->ends[line-1];
     }
 
     chunk->lines->ends[line-1] = chunk->count;
