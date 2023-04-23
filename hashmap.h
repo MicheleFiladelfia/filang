@@ -38,7 +38,7 @@ bool contains(HashMap *map, ObjString *key);
 
 ObjString *getStringEntry(HashMap *map, const char *key, int length, uint32_t hash);
 
-#define HASHMAP_MAX_LOAD 0.53
+#define HASHMAP_MAX_LOAD 0.57
 #define IS_EMPTY(entry) ((entry).key == NULL)
 
 
