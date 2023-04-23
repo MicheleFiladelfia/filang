@@ -73,7 +73,7 @@ static void runtimeError(const char *format, ...) {
 
     int line = 1;
     for(int i = 0; i < vm.chunk->lines.count; i++){
-        if (vm.chunk->lines.ends[i] > instruction && vm.chunk->lines.ends[i] != -1){
+        if ((size_t)vm.chunk->lines.ends[i] > instruction && vm.chunk->lines.ends[i] != -1){
             line = i+1;
             break;
         }
@@ -88,7 +88,7 @@ static void runtimeError(const char *format, ...) {
 
 InterpretResult execute() {
 #define READ_BYTE() (*vm.ip++)
-#define NEXT_BYTE() (*(vm.ip))
+#define NEXT_BYTE() (*vm.ip)
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
 #define READ_CONSTANT_LONG() (vm.chunk->constants.values[READ_BYTE() + (READ_BYTE()<<8)])
 #define READ_CONSTANT_LONG_LONG() (vm.chunk->constants.values[READ_BYTE() + (READ_BYTE()<<8) + (READ_BYTE()<<16)])

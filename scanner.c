@@ -95,7 +95,7 @@ static Token number() {
 
 bool checkKeyword(char *expected) {
     int i = 0;
-    while (isAlpha(peek()) || isDigit(peek()) || i < strlen(expected)) {
+    while (isAlpha(peek()) || isDigit(peek()) || i < (int)strlen(expected)) {
         if (expected[i] != peek()) {
             return false;
         }
@@ -109,28 +109,39 @@ static Token identifier() {
     switch (scanner.start[0]) {
         case 'a':
             if (checkKeyword("nd")) return makeToken(TOKEN_AND);
+            break;
         case 'o':
             if (checkKeyword("r")) return makeToken(TOKEN_OR);
+            break;
         case 'i':
             if (checkKeyword("f")) return makeToken(TOKEN_IF);
+            break;
         case 'e':
             if (checkKeyword("lse")) return makeToken(TOKEN_ELSE);
+            break;
         case 'p':
             if (checkKeyword("rint")) return makeToken(TOKEN_PRINT);
+            break;
         case 'r':
             if (checkKeyword("eturn")) return makeToken(TOKEN_RETURN);
+            break;
         case 'f':
             if (checkKeyword("n")) return makeToken(TOKEN_FN);
             if (checkKeyword("alse")) return makeToken(TOKEN_FALSE);
+            break;
         case 'v':
             if (checkKeyword("ar")) return makeToken(TOKEN_VAR);
+            break;
         case 't':
             if (checkKeyword("rue")) return makeToken(TOKEN_TRUE);
+            break;
         case 'n':
             if (checkKeyword("il")) return makeToken(TOKEN_NIL);
             if (checkKeyword("ot")) return makeToken(TOKEN_NOT);
+            break;
         case 'c':
             if (checkKeyword("lock")) return makeToken(TOKEN_CLOCK);
+            break;
 
     }
 
@@ -227,6 +238,8 @@ Token scanToken() {
         case '!':
             if (match('=')) {
                 return makeToken(TOKEN_BANG_EQUAL);
+            } else {
+                return errorToken("Unexpected character", "!");
             }
         case '>':
             if (match('=')) {

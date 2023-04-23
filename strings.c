@@ -23,6 +23,8 @@ char *typeToString(Value value) {
                 return "<class 'String'>";
             else
                 return "<class 'Object'>";
+        default:
+            return "<unknown type>";
     }
 }
 
@@ -53,13 +55,14 @@ ObjString *toString(Value value) {
             } else {
                 return makeObjString("true", 5);
             }
-        case VAL_NIL:
-            return makeObjString("nil", 4);
         case VAL_OBJECT:
             if (IS_STRING(value))
                 return ((ObjString *) value.as.object);
             else
                 return makeObjString(typeToString(value), (int) strlen(typeToString(value)));
+        case VAL_NIL:
+        default:
+            return makeObjString("nil", 4);
     }
 }
 

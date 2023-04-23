@@ -24,7 +24,7 @@ static char *readFromFile(char *fileName) {
     size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
     buffer[fileSize] = '\0';
 
-    if (bytesRead < fileSize) {
+    if ((long)bytesRead < fileSize) {
         fprintf(stderr, "Could not read file %s", fileName);
         exit(1);
     }

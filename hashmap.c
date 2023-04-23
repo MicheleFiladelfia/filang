@@ -35,7 +35,7 @@ void growCapacity(HashMap *map) {
     }
 
     map->count = 0;
-    for (int i = 0; i < oldCapacity; i++) {
+    for (int i = 0; i < (int)oldCapacity; i++) {
         Entry *entry = &oldEntries[i];
         if (entry->key == NULL) continue;
         addEntry(map, entry->key, entry->value);
