@@ -51,7 +51,7 @@ typedef struct {
     uint8_t *code;
     int count;
     int capacity;
-    Lines *lines;
+    Lines lines;
     ValueArray constants;
 } Chunk;
 
