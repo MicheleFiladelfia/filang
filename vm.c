@@ -2,6 +2,8 @@
 #include <math.h>
 #include <stdarg.h>
 #include <string.h>
+#include <bits/types/clock_t.h>
+#include <time.h>
 #include "vm.h"
 #include "chunk.h"
 #include "compiler.h"
@@ -70,8 +72,8 @@ static void runtimeError(const char *format, ...) {
     size_t instruction = vm.ip - vm.chunk->code - 1;
 
     int line = 1;
-    for(int i = 0; i < vm.chunk->lines->count; i++){
-        if (vm.chunk->lines->ends[i] > instruction && vm.chunk->lines->ends[i] != -1){
+    for(int i = 0; i < vm.chunk->lines.count; i++){
+        if (vm.chunk->lines.ends[i] > instruction && vm.chunk->lines.ends[i] != -1){
             line = i+1;
             break;
         }
@@ -389,6 +391,9 @@ InterpretResult execute() {
                     return RUNTIME_ERROR;
                 }
                 break;
+            case OP_CLOCK:
+                push(FLOAT_CAST((double) clock() / CLOCKS_PER_SEC));
+                break;
         }
     }
 #undef READ_BYTE
@@ -416,6 +421,7 @@ InterpretResult interpret(const char *source) {
     vm.ip = vm.chunk->code;
 
     InterpretResult result = execute();
+
     freeChunk(&chunk);
     return result;
 }

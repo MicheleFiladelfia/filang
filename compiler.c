@@ -411,6 +411,10 @@ static void string(bool allowAssignment) {
     emitConstant(OBJECT_CAST(string));
 }
 
+static void clock(bool allowAssignment) {
+    emitByte(OP_CLOCK);
+}
+
 static void boolean(bool allowAssignment) {
     if (parser.previous.type == TOKEN_TRUE) {
         emitByte(OP_TRUE);
@@ -469,7 +473,8 @@ ParseRule parseRules[] = {
         [TOKEN_TRUE]        =   {boolean, NULL, PrecNone},
         [TOKEN_FALSE]       =   {boolean, NULL, PrecNone},
         [TOKEN_NIL]         =   {nil, NULL, PrecNone},
-        [TOKEN_ERROR]       =   {NULL, NULL, PrecNone}
+        [TOKEN_ERROR]       =   {NULL, NULL, PrecNone},
+        [TOKEN_CLOCK]      =   {clock, NULL, PrecNone},
 };
 
 

@@ -129,6 +129,8 @@ static Token identifier() {
         case 'n':
             if (checkKeyword("il")) return makeToken(TOKEN_NIL);
             if (checkKeyword("ot")) return makeToken(TOKEN_NOT);
+        case 'c':
+            if (checkKeyword("lock")) return makeToken(TOKEN_CLOCK);
 
     }
 

@@ -15,6 +15,7 @@ typedef enum {
     TOKEN_STAR_STAR, TOKEN_AND,
     TOKEN_OR, TOKEN_NOT,
     TOKEN_PRINT, TOKEN_COLONS,
+    TOKEN_CLOCK,
 
     //bitwise
     TOKEN_AMPERSAND, TOKEN_PIPE,

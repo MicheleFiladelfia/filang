@@ -39,6 +39,7 @@ typedef enum {
     OP_DEFINE_GLOBAL,
     OP_GET_GLOBAL,
     OP_SET_GLOBAL,
+    OP_CLOCK,
 } OpCode;
 
 typedef struct {
