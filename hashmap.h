@@ -30,7 +30,7 @@ void freeHashMap(HashMap *map);
 
 bool addEntry(HashMap *map, ObjString *key, Value value);
 
-Value getEntry(HashMap *map, ObjString *key);
+Entry* getEntry(HashMap *map, ObjString *key);
 
 void eraseEntry(HashMap *map, ObjString *key);
 

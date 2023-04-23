@@ -174,7 +174,8 @@ InterpretResult execute() {
     } while (false)
 
     ObjString *name;
-    Value temp;
+    Entry *entry;
+
     for (;;) {
         switch (READ_BYTE()) {
             case OP_RETURN:
@@ -372,23 +373,29 @@ InterpretResult execute() {
             case OP_GET_GLOBAL:
                 READ_STRING(name);
 
-                temp = getEntry(&vm.globals, name);
+                entry = getEntry(&vm.globals, name);
 
-                if (temp.type != VAL_NIL) {
-                    push(temp);
+                if(entry != NULL) {
+                    push(entry->value);
                 } else {
                     runtimeError("undefined variable: '%s'.", name->chars);
                     return RUNTIME_ERROR;
                 }
+
                 break;
             case OP_SET_GLOBAL:
                 READ_STRING(name);
 
-                if (!addEntry(&vm.globals, name, peek(0))) {
-                    eraseEntry(&vm.globals, name);
+                entry = getEntry(&vm.globals, name);
+
+                if (entry != NULL) {
+                    entry->value = peek(0);
+                    entry->key = name;
+                } else {
                     runtimeError("undefined variable: '%s'.", name->chars);
                     return RUNTIME_ERROR;
                 }
+
                 break;
             case OP_CLOCK:
                 push(FLOAT_CAST((double) clock() / CLOCKS_PER_SEC));

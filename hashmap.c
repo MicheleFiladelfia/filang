@@ -89,7 +89,6 @@ bool contains(HashMap *map, ObjString *key) {
     }
 }
 
-//assuming the key is not already in the map
 bool addEntry(HashMap *map, ObjString *key, Value value) {
     if (map->count + 1 > map->capacity * HASHMAP_MAX_LOAD) {
         growCapacity(map);
@@ -105,6 +104,7 @@ bool addEntry(HashMap *map, ObjString *key, Value value) {
             map->entries[index].value = value;
             return false;
         }else if (map->entries[index].key == key) {
+            //replacing the value
             map->entries[index].value = value;
             return true;
         }
@@ -129,17 +129,17 @@ bool addEntry(HashMap *map, ObjString *key, Value value) {
 }
 
 
-Value getEntry(HashMap *map, ObjString *key) {
+Entry *getEntry(HashMap *map, ObjString *key) {
     uint32_t hash = key->hash;
     uint64_t index = hash & (map->capacity - 1);
 
     for (;;) {
         if (map->count == 0 || IS_EMPTY(map->entries[index])) {
-            return NIL;
+            return NULL;
         }
 
         if (map->entries[index].key == key) {
-            return map->entries[index].value;
+            return &map->entries[index];
         }
 
         index = (index + 1) & (map->capacity - 1);
