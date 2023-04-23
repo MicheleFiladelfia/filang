@@ -1,7 +1,7 @@
 #ifndef FILANG_HASHMAP_H
 #define FILANG_HASHMAP_H
 
-#include <stdint-gcc.h>
+#include <stdint.h>
 #include <stddef.h>
 #include "value.h"
 #include "value.h"
