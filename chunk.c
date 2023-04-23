@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <string.h>
 #include "chunk.h"
 #include "memory.h"
@@ -8,9 +7,10 @@ void initChunk(Chunk *chunk) {
     chunk->code = NULL;
     chunk->capacity = 0;
     chunk->count = 0;
+    chunk->lines = ALLOCATE(Lines, 1);
     chunk->lines->ends = NULL;
-    chunk->lines->count = 0;
     chunk->lines->capacity = 0;
+    chunk->lines->count = 0;
 
     initValueArray(&chunk->constants);
 }
