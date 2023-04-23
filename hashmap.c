@@ -90,7 +90,7 @@ bool contains(HashMap *map, ObjString *key) {
 }
 
 //assuming the key is not already in the map
-void addEntry(HashMap *map, ObjString *key, Value value) {
+bool addEntry(HashMap *map, ObjString *key, Value value) {
     if (map->count + 1 > map->capacity * HASHMAP_MAX_LOAD) {
         growCapacity(map);
     }
@@ -103,7 +103,10 @@ void addEntry(HashMap *map, ObjString *key, Value value) {
         if (IS_EMPTY(map->entries[index])) {
             map->entries[index].key = key;
             map->entries[index].value = value;
-            return;
+            return false;
+        }else if (map->entries[index].key == key) {
+            map->entries[index].value = value;
+            return true;
         }
 
         uint32_t desired = map->entries[index].key->hash & (map->capacity - 1);

@@ -174,7 +174,7 @@ InterpretResult execute() {
     } while (false)
 
     ObjString *name;
-
+    Value temp;
     for (;;) {
         switch (READ_BYTE()) {
             case OP_RETURN:
@@ -363,18 +363,19 @@ InterpretResult execute() {
             case OP_DEFINE_GLOBAL:
                 READ_STRING(name);
 
-                if (!contains(&vm.globals, name)) {
-                    addEntry(&vm.globals, name, pop());
-                } else {
+                if(addEntry(&vm.globals, name, pop())) {
                     runtimeError("redefinition of variable '%s'.", name->chars);
                     return RUNTIME_ERROR;
                 }
+
                 break;
             case OP_GET_GLOBAL:
                 READ_STRING(name);
 
-                if (contains(&vm.globals, name)) {
-                    push(getEntry(&vm.globals, name));
+                temp = getEntry(&vm.globals, name);
+
+                if (temp.type != VAL_NIL) {
+                    push(temp);
                 } else {
                     runtimeError("undefined variable: '%s'.", name->chars);
                     return RUNTIME_ERROR;
@@ -383,10 +384,8 @@ InterpretResult execute() {
             case OP_SET_GLOBAL:
                 READ_STRING(name);
 
-                if (contains(&vm.globals, name)) {
+                if (!addEntry(&vm.globals, name, peek(0))) {
                     eraseEntry(&vm.globals, name);
-                    addEntry(&vm.globals, name, peek(0));
-                } else {
                     runtimeError("undefined variable: '%s'.", name->chars);
                     return RUNTIME_ERROR;
                 }

@@ -28,7 +28,7 @@ void initHashMap(HashMap *map);
 
 void freeHashMap(HashMap *map);
 
-void addEntry(HashMap *map, ObjString *key, Value value);
+bool addEntry(HashMap *map, ObjString *key, Value value);
 
 Value getEntry(HashMap *map, ObjString *key);
 
