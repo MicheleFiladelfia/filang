@@ -70,9 +70,6 @@ static void repl() {
 static void runFile(char *fileName) {
     vm.repl = false;
     char *sourceCode = readFromFile(fileName);
-
-    initScanner(sourceCode);
-
     interpret(sourceCode);
 }
 
