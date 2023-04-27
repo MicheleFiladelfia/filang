@@ -134,6 +134,7 @@ static Token identifier() {
             break;
         case 't':
             if (checkKeyword("rue")) return makeToken(TOKEN_TRUE);
+            if (checkKeyword("ypeof")) return makeToken(TOKEN_TYPEOF);
             break;
         case 'n':
             if (checkKeyword("il")) return makeToken(TOKEN_NIL);

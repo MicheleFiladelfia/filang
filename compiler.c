@@ -415,6 +415,11 @@ static void clock(bool allowAssignment) {
     emitByte(OP_CLOCK);
 }
 
+static void typeOf(bool allowAssignment) {
+    parsePrecedence(PrecNone + 1);
+    emitByte(OP_TYPEOF);
+}
+
 static void boolean(bool allowAssignment) {
     if (parser.previous.type == TOKEN_TRUE) {
         emitByte(OP_TRUE);
@@ -475,6 +480,7 @@ ParseRule parseRules[] = {
         [TOKEN_NIL]         =   {nil, NULL, PrecNone},
         [TOKEN_ERROR]       =   {NULL, NULL, PrecNone},
         [TOKEN_CLOCK]      =   {clock, NULL, PrecNone},
+        [TOKEN_TYPEOF]    =   {typeOf, NULL, PrecNone},
 };
 
 

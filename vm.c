@@ -2,7 +2,6 @@
 #include <math.h>
 #include <stdarg.h>
 #include <string.h>
-#include <bits/types/clock_t.h>
 #include <time.h>
 #include "vm.h"
 #include "chunk.h"
@@ -175,6 +174,7 @@ InterpretResult execute() {
 
     ObjString *name;
     Entry *entry;
+    char *cstr;
 
     for (;;) {
         switch (READ_BYTE()) {
@@ -399,6 +399,10 @@ InterpretResult execute() {
                 break;
             case OP_CLOCK:
                 push(FLOAT_CAST((double) clock() / CLOCKS_PER_SEC));
+                break;
+            case OP_TYPEOF:
+                cstr = typeToString(pop());
+                push(OBJECT_CAST(makeObjString(cstr, strlen(cstr))));
                 break;
         }
     }
