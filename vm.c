@@ -21,6 +21,7 @@ void initVM() {
 
 void freeVM() {
     freeHashMap(&vm.strings);
+    freeHashMap(&vm.globals);
 }
 
 static void push(Value value) {
