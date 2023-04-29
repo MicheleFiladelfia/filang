@@ -5,7 +5,6 @@
 #include <signal.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-#include "scanner.h"
 #include "vm.h"
 
 static char *readFromFile(char *fileName) {

@@ -87,8 +87,8 @@ static void runtimeError(const char *format, ...) {
 }
 
 InterpretResult execute() {
-#define READ_BYTE() (*vm.ip++)
-#define NEXT_BYTE() (*vm.ip)
+#define READ_BYTE() (*(vm.ip++))
+#define NEXT_BYTE() (*(vm.ip))
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
 #define READ_CONSTANT_LONG() (vm.chunk->constants.values[READ_BYTE() + (READ_BYTE()<<8)])
 #define READ_CONSTANT_LONG_LONG() (vm.chunk->constants.values[READ_BYTE() + (READ_BYTE()<<8) + (READ_BYTE()<<16)])
@@ -365,7 +365,7 @@ InterpretResult execute() {
             case OP_DEFINE_GLOBAL:
                 READ_STRING(name);
 
-                if(addEntry(&vm.globals, name, pop())) {
+                if (addEntry(&vm.globals, STRING_CAST(name), pop())) {
                     runtimeError("redefinition of variable '%s'.", name->chars);
                     return RUNTIME_ERROR;
                 }
@@ -374,7 +374,7 @@ InterpretResult execute() {
             case OP_GET_GLOBAL:
                 READ_STRING(name);
 
-                entry = getEntry(&vm.globals, name);
+                entry = getEntry(&vm.globals, STRING_CAST(name));
 
                 if(entry != NULL) {
                     push(entry->value);
@@ -387,11 +387,11 @@ InterpretResult execute() {
             case OP_SET_GLOBAL:
                 READ_STRING(name);
 
-                entry = getEntry(&vm.globals, name);
+                entry = getEntry(&vm.globals, STRING_CAST(name));
 
                 if (entry != NULL) {
                     entry->value = peek(0);
-                    entry->key = name;
+                    entry->key = STRING_CAST(name);
                 } else {
                     runtimeError("undefined variable: '%s'.", name->chars);
                     return RUNTIME_ERROR;

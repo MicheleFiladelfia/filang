@@ -4,6 +4,7 @@
 #include "value.h"
 #include "strings.h"
 
+
 uint32_t hashString(const char *key, int length) {
     uint32_t hash = 2166136261u;
     for (int i = 0; i < length; i++) {
@@ -11,6 +12,65 @@ uint32_t hashString(const char *key, int length) {
         hash *= 16777619;
     }
     return hash;
+}
+
+uint32_t hashDouble(double key) {
+    const uint32_t fnvOffset = 2166136261u;
+    const uint32_t fnvPrime = 16777619u;
+    uint32_t hash = fnvOffset;
+    uint8_t *bytes = (uint8_t *) &key;
+    for (size_t i = 0; i < sizeof(double); i++) {
+        hash ^= bytes[i];
+        hash *= fnvPrime;
+    }
+    return hash;
+}
+
+uint32_t hashInt(int64_t key) {
+    const uint32_t fnvOffset = 2166136261u;
+    const uint32_t fnvPrime = 16777619u;
+    uint32_t hash = fnvOffset;
+    uint8_t *bytes = (uint8_t *) &key;
+    for (size_t i = 0; i < sizeof(key); i++) {
+        hash ^= bytes[i];
+        hash *= fnvPrime;
+    }
+    return hash;
+}
+
+static bool compare(Value a, Value b) {
+    if (a.type != b.type) return false;
+    switch (a.type) {
+        case VAL_BOOL:
+        case VAL_INTEGER:
+            return a.as.integer == b.as.integer;
+        case VAL_FLOAT:
+            return a.as.floatingPoint == b.as.floatingPoint;
+        case VAL_OBJECT:
+            if (IS_STRING(a) && IS_STRING(b)) {
+                return AS_STRING(a) == AS_STRING(b);
+            }
+            return false;
+        default:
+            return false;
+    }
+}
+
+uint32_t getHash(Value val) {
+    switch (val.type) {
+        case VAL_BOOL:
+        case VAL_INTEGER:
+            return hashInt(val.as.integer);
+        case VAL_FLOAT:
+            return hashDouble(val.as.floatingPoint);
+        case VAL_OBJECT:
+            if (IS_STRING(val)) {
+                return AS_STRING(val)->hash;
+            }
+            return (uint32_t) (intptr_t) val.as.object;
+        default:
+            return 0;
+    }
 }
 
 void initHashMap(HashMap *map) {
@@ -30,14 +90,14 @@ void growCapacity(HashMap *map) {
     map->capacity = GROW_ARRAY_CAPACITY(oldCapacity);
     map->entries = ALLOCATE(Entry, map->capacity);
     for (int i = 0; i < map->capacity; i++) {
-        map->entries[i].key = NULL;
+        map->entries[i].key.type = VAL_NIL;
         map->entries[i].value = NIL;
     }
 
     map->count = 0;
     for (int i = 0; i < (int)oldCapacity; i++) {
         Entry *entry = &oldEntries[i];
-        if (entry->key == NULL) continue;
+        if (entry->key.type == VAL_NIL) continue;
         addEntry(map, entry->key, entry->value);
     }
     FREE_ARRAY(oldEntries, Entry, oldCapacity);
@@ -45,10 +105,10 @@ void growCapacity(HashMap *map) {
 
 static void removeByIndex(HashMap *map, uint32_t index) {
     while (true) {
-        map->entries[index].key = NULL;
+        map->entries[index].key.type = VAL_NIL;
         uint32_t next = (index + 1) & (map->capacity - 1);
         if (IS_EMPTY(map->entries[next])) return;
-        uint32_t desired = map->entries[next].key->hash & (map->capacity - 1);
+        uint32_t desired = getHash(map->entries[next].key) & (map->capacity - 1);
         if (next == desired) return;
         map->entries[index].key = map->entries[next].key;
         map->entries[index].value = map->entries[next].value;
@@ -56,14 +116,14 @@ static void removeByIndex(HashMap *map, uint32_t index) {
     }
 }
 
-void eraseEntry(HashMap *map, ObjString *key) {
+void eraseEntry(HashMap *map, Value key) {
     if (map->count == 0) return;
-    uint32_t index = key->hash & (map->capacity - 1);
+    uint32_t index = getHash(key) & (map->capacity - 1);
 
     while (true) {
         if (IS_EMPTY(map->entries[index])) {
             return;
-        } else if (map->entries[index].key == key) {
+        } else if (compare(map->entries[index].key, key)) {
             removeByIndex(map, index);
             map->count--;
             return;
@@ -72,16 +132,16 @@ void eraseEntry(HashMap *map, ObjString *key) {
     }
 }
 
-bool contains(HashMap *map, ObjString *key) {
+bool contains(HashMap *map, Value key) {
     if (map->count == 0) return false;
 
-    uint32_t hash = key->hash;
+    uint32_t hash = getHash(key);
     uint64_t index = hash & (map->capacity - 1);
     uint64_t dist = 0;
     for (;;) {
         if (IS_EMPTY(map->entries[index])) return false;
-        if (map->entries[index].key == key) return true;
-        uint64_t desired = map->entries[index].key->hash & (map->capacity - 1);
+        if (compare(map->entries[index].key, key)) return true;
+        uint64_t desired = getHash(map->entries[index].key) & (map->capacity - 1);
         uint64_t cur_dist = (index + map->capacity - desired) & (map->capacity - 1);
         if (cur_dist < dist) return false;
         dist++;
@@ -89,12 +149,12 @@ bool contains(HashMap *map, ObjString *key) {
     }
 }
 
-bool addEntry(HashMap *map, ObjString *key, Value value) {
+bool addEntry(HashMap *map, Value key, Value value) {
     if (map->count + 1 > map->capacity * HASHMAP_MAX_LOAD) {
         growCapacity(map);
     }
 
-    uint32_t index = key->hash & (map->capacity - 1);
+    uint32_t index = getHash(key) & (map->capacity - 1);
     uint32_t dist = 0;
     map->count++;
 
@@ -103,17 +163,17 @@ bool addEntry(HashMap *map, ObjString *key, Value value) {
             map->entries[index].key = key;
             map->entries[index].value = value;
             return false;
-        }else if (map->entries[index].key == key) {
+        } else if (compare(map->entries[index].key, key)) {
             //replacing the value
             map->entries[index].value = value;
             return true;
         }
 
-        uint32_t desired = map->entries[index].key->hash & (map->capacity - 1);
+        uint32_t desired = getHash(map->entries[index].key) & (map->capacity - 1);
         uint32_t cur_dist = (index + map->capacity - desired) & (map->capacity - 1);
         if (cur_dist < dist) {
             //swapping current key and value with the collided key and value
-            ObjString *temp_key = map->entries[index].key;
+            Value temp_key = map->entries[index].key;
             Value temp_value = map->entries[index].value;
             map->entries[index].key = key;
             map->entries[index].value = value;
@@ -129,8 +189,8 @@ bool addEntry(HashMap *map, ObjString *key, Value value) {
 }
 
 
-Entry *getEntry(HashMap *map, ObjString *key) {
-    uint32_t hash = key->hash;
+Entry *getEntry(HashMap *map, Value key) {
+    uint32_t hash = getHash(key);
     uint64_t index = hash & (map->capacity - 1);
 
     for (;;) {
@@ -138,7 +198,7 @@ Entry *getEntry(HashMap *map, ObjString *key) {
             return NULL;
         }
 
-        if (map->entries[index].key == key) {
+        if (compare(map->entries[index].key, key)) {
             return &map->entries[index];
         }
 
@@ -154,10 +214,10 @@ ObjString *getStringEntry(HashMap *map, const char *key, int length, uint32_t ha
             return NULL;
         }
 
-        if (length == map->entries[index].key->length &&
-            (hash == map->entries[index].key->hash) &&
-            (memcmp(key, map->entries[index].key->chars, length) == 0)) {
-            return map->entries[index].key;
+        if (length == AS_STRING(map->entries[index].key)->length &&
+            (hash == AS_STRING(map->entries[index].key)->hash) &&
+            (memcmp(key, AS_STRING(map->entries[index].key)->chars, length) == 0)) {
+            return AS_STRING(map->entries[index].key);
         }
 
         index = (index + 1) & (map->capacity - 1);

@@ -12,7 +12,7 @@
  */
 
 typedef struct {
-    ObjString *key;
+    Value key;
     Value value;
 } Entry;
 
@@ -28,18 +28,18 @@ void initHashMap(HashMap *map);
 
 void freeHashMap(HashMap *map);
 
-bool addEntry(HashMap *map, ObjString *key, Value value);
+bool addEntry(HashMap *map, Value key, Value value);
 
-Entry* getEntry(HashMap *map, ObjString *key);
+Entry *getEntry(HashMap *map, Value key);
 
-void eraseEntry(HashMap *map, ObjString *key);
+void eraseEntry(HashMap *map, Value key);
 
-bool contains(HashMap *map, ObjString *key);
+bool contains(HashMap *map, Value key);
 
 ObjString *getStringEntry(HashMap *map, const char *key, int length, uint32_t hash);
 
 #define HASHMAP_MAX_LOAD 0.57
-#define IS_EMPTY(entry) ((entry).key == NULL)
+#define IS_EMPTY(entry) ((entry).key.type == VAL_NIL)
 
 
 #endif //FILANG_HASHMAP_H

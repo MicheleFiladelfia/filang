@@ -5,6 +5,7 @@
 
 #define IS_STRING(value) (IS_OBJECT(value) && ((Object *) (value).as.object)->type == OBJ_STRING)
 #define AS_STRING(value) ((ObjString *) AS_OBJECT(value))
+#define STRING_CAST(value) ((Value){VAL_OBJECT, {.object = (Object *) (value)}})
 
 typedef struct {
     Objtype type;
@@ -12,8 +13,6 @@ typedef struct {
     uint32_t hash;
     char chars[];
 } ObjString;
-
-char *copyString(const char *chars, int length);
 
 char *typeToString(Value type);
 
