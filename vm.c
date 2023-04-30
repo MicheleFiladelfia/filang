@@ -93,18 +93,16 @@ InterpretResult execute() {
 #define READ_CONSTANT_LONG() (vm.chunk->constants.values[READ_BYTE() + (READ_BYTE()<<8)])
 #define READ_CONSTANT_LONG_LONG() (vm.chunk->constants.values[READ_BYTE() + (READ_BYTE()<<8) + (READ_BYTE()<<16)])
 #define READ_STRING_BYTE() AS_STRING(READ_CONSTANT())
-#define READ_STRING_LONG() AS_STRING(READ_CONSTANT_LONG())
-#define READ_STRING_LONG_LONG() AS_STRING(READ_CONSTANT_LONG_LONG())
 #define READ_STRING(str)                                                                           \
     switch (READ_BYTE()){                                                                          \
         case OP_CONSTANT:                                                                          \
-            str = READ_STRING_BYTE();                                                              \
+            str = READ_CONSTANT();                                                              \
             break;                                                                                 \
         case OP_CONSTANT_LONG:                                                                     \
-            str = READ_STRING_LONG();                                                              \
+            str = READ_CONSTANT_LONG();                                                              \
             break;                                                                                 \
         case OP_CONSTANT_LONG_LONG:                                                                \
-            str = READ_STRING_LONG_LONG();                                                         \
+            str = READ_CONSTANT_LONG_LONG();                                                         \
             break;                                                                                 \
         default:                                                                                   \
             runtimeError("An error occurred.");                                                    \
@@ -173,7 +171,7 @@ InterpretResult execute() {
         push(INTEGER_CAST(a operator b));                                                                                                 \
     } while (false)
 
-    ObjString *name;
+    Value temp;
     Entry *entry;
     char *cstr;
 
@@ -322,13 +320,13 @@ InterpretResult execute() {
                 break;
             case OP_TERNARY:
                 if (isTrue(peek(2))) {
-                    Value result = peek(1);
+                    temp = peek(1);
                     popValues(3);
-                    push(result);
+                    push(temp);
                 } else {
-                    Value result = peek(0);
+                    temp = peek(0);
                     popValues(3);
-                    push(result);
+                    push(temp);
                 }
                 break;
             case OP_BW_AND:
@@ -363,37 +361,37 @@ InterpretResult execute() {
                 }
                 break;
             case OP_DEFINE_GLOBAL:
-                READ_STRING(name);
+                READ_STRING(temp);
 
-                if (addEntry(&vm.globals, STRING_CAST(name), pop())) {
-                    runtimeError("redefinition of variable '%s'.", name->chars);
+                if (addEntry(&vm.globals, temp, pop())) {
+                    runtimeError("redefinition of variable '%s'.", AS_STRING(temp)->chars);
                     return RUNTIME_ERROR;
                 }
 
                 break;
             case OP_GET_GLOBAL:
-                READ_STRING(name);
+                READ_STRING(temp);
 
-                entry = getEntry(&vm.globals, STRING_CAST(name));
+                entry = getEntry(&vm.globals, temp);
 
-                if(entry != NULL) {
+                if (entry != NULL) {
                     push(entry->value);
                 } else {
-                    runtimeError("undefined variable: '%s'.", name->chars);
+                    runtimeError("undefined variable: '%s'.", AS_STRING(temp)->chars);
                     return RUNTIME_ERROR;
                 }
 
                 break;
             case OP_SET_GLOBAL:
-                READ_STRING(name);
+                READ_STRING(temp);
 
-                entry = getEntry(&vm.globals, STRING_CAST(name));
+                entry = getEntry(&vm.globals, temp);
 
                 if (entry != NULL) {
                     entry->value = peek(0);
-                    entry->key = STRING_CAST(name);
+                    entry->key = temp;
                 } else {
-                    runtimeError("undefined variable: '%s'.", name->chars);
+                    runtimeError("undefined variable: '%s'.", AS_STRING(temp)->chars);
                     return RUNTIME_ERROR;
                 }
 
