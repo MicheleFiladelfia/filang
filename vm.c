@@ -271,20 +271,48 @@ InterpretResult execute() {
                 }
                 break;
             case OP_EQUALS:
-                if (IS_FLOAT(peek(0)) && IS_FLOAT(peek(1))) {
-                    push(BOOL_CAST(pop().as.floatingPoint == pop().as.floatingPoint));
-                } else if (IS_INTEGER(peek(0)) && IS_INTEGER(peek(1))) {
-                    push(BOOL_CAST(pop().as.integer == pop().as.integer));
-                } else if (IS_NIL(peek(0)) && IS_NIL(peek(1))) {
-                    push(BOOL_CAST(true));
-                } else if (IS_FLOAT(peek(0)) && IS_INTEGER(peek(1))) {
-                    push(BOOL_CAST(pop().as.floatingPoint == pop().as.integer));
-                } else if (IS_INTEGER(peek(0)) && IS_FLOAT(peek(1))) {
-                    push(BOOL_CAST(pop().as.integer == pop().as.floatingPoint));
-                } else if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
-                    push(BOOL_CAST(AS_STRING(peek(0)) == AS_STRING(peek(1))));
-                } else {
-                    push(BOOL_CAST(false));
+                switch (peek(0).type) {
+                    case VAL_BOOL:
+                    case VAL_INTEGER:
+                        switch (peek(1).type) {
+                            case VAL_BOOL:
+                            case VAL_INTEGER:
+                                push(BOOL_CAST(pop().as.integer == pop().as.integer));
+                                break;
+                            case VAL_FLOAT:
+                                push(BOOL_CAST(pop().as.integer == pop().as.floatingPoint));
+                                break;
+                            case VAL_OBJECT:
+                            case VAL_NIL:
+                                push(BOOL_CAST(false));
+                                break;
+                        }
+                        break;
+                    case VAL_FLOAT:
+                        switch (peek(1).type) {
+                            case VAL_BOOL:
+                            case VAL_INTEGER:
+                                push(BOOL_CAST(pop().as.floatingPoint == pop().as.integer));
+                                break;
+                            case VAL_FLOAT:
+                                push(BOOL_CAST(pop().as.floatingPoint == pop().as.floatingPoint));
+                                break;
+                            case VAL_OBJECT:
+                            case VAL_NIL:
+                                push(BOOL_CAST(false));
+                                break;
+                        }
+                        break;
+                    case VAL_OBJECT:
+                        if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
+                            push(BOOL_CAST(AS_STRING(peek(0)) == AS_STRING(peek(1))));
+                        } else {
+                            push(BOOL_CAST(false));
+                        }
+                        break;
+                    case VAL_NIL:
+                        push(BOOL_CAST(peek(1).type == VAL_NIL));
+                        break;
                 }
                 break;
             case OP_AND:
