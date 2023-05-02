@@ -14,12 +14,12 @@ typedef struct {
     char chars[];
 } ObjString;
 
-char *typeToString(Value type);
+char *type_to_string(Value value);
 
-ObjString *toString(Value value);
+ObjString *value_to_string(Value value);
 
-ObjString *makeObjString(const char *chars, int length);
+ObjString *make_objstring(const char *chars, int length);
 
-ObjString *concatenateStrings(ObjString *a, ObjString *b);
+ObjString *concatenate_strings(ObjString *a, ObjString *b);
 
 #endif //FILANG_STRINGS_H

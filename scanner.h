@@ -3,8 +3,8 @@
 
 #include "token.h"
 
-void initScanner(const char *source);
+void init_scanner(const char *source);
 
-Token scanToken();
+Token scan_token();
 
 #endif //FILANG_SCANNER_H

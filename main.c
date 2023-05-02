@@ -7,11 +7,11 @@
 #include <readline/history.h>
 #include "vm.h"
 
-static char *readFromFile(char *fileName) {
-    FILE *file = fopen(fileName, "r");
+static char *read_from_file(char *file_path) {
+    FILE *file = fopen(file_path, "r");
 
     if (file == NULL) {
-        fprintf(stderr, "Could not open file %s", fileName);
+        fprintf(stderr, "Could not open file %s", file_path);
         exit(1);
     }
 
@@ -20,11 +20,11 @@ static char *readFromFile(char *fileName) {
     rewind(file);
 
     char *buffer = (char *) malloc(fileSize + 1);
-    size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
+    size_t bytes_read = fread(buffer, sizeof(char), fileSize, file);
     buffer[fileSize] = '\0';
 
-    if ((long)bytesRead < fileSize) {
-        fprintf(stderr, "Could not read file %s", fileName);
+    if ((long) bytes_read < fileSize) {
+        fprintf(stderr, "Could not read file %s", file_path);
         exit(1);
     }
 
@@ -33,22 +33,22 @@ static char *readFromFile(char *fileName) {
     return buffer;
 }
 
-static void signalHandler(int) {
+static void signal_handler(int) {
     printf("\nCaught Ctrl+C, terminated.");
     exit(0);
 }
 
 
-static void initializeReadline() {
+static void initialize_readline() {
     rl_bind_key('\t', rl_insert);
     using_history();
 }
 
 static void repl() {
-    initializeReadline();
+    initialize_readline();
 
     vm.repl = true;
-    if (signal(SIGINT, signalHandler) == SIG_ERR) {
+    if (signal(SIGINT, signal_handler) == SIG_ERR) {
         fprintf(stderr, "Could not register signal handler");
         exit(1);
     }
@@ -66,25 +66,25 @@ static void repl() {
     }
 }
 
-static void runFile(char *fileName) {
+static void run_file(char *fileName) {
     vm.repl = false;
-    char *sourceCode = readFromFile(fileName);
+    char *sourceCode = read_from_file(fileName);
     interpret(sourceCode);
 }
 
 
 int main(int argc, char *argv[]) {
-    initVM();
+    init_vm();
 
     if (argc == 1) {
         repl();
     } else if (argc == 2) {
-        runFile(argv[1]);
+        run_file(argv[1]);
     } else {
         fprintf(stderr, "Usage: filang <filepath>.fi\n");
         return 1;
     }
 
-    freeVM();
+    free_vm();
     return 0;
 }

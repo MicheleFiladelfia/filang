@@ -18,15 +18,15 @@ typedef struct {
     uint8_t *ip;
     Value stack[256];
     Value *stackTop;
-    HashMap strings;
-    HashMap globals;
+    Hashmap strings;
+    Hashmap globals;
 } VM;
 
 extern VM vm;
 
-void initVM();
+void init_vm();
 
-void freeVM();
+void free_vm();
 
 InterpretResult interpret(const char *source);
 

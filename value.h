@@ -57,12 +57,12 @@ struct Object {
 
 #define AS_OBJECT(value) ((value).as.object)
 
-void printValue(Value value);
+void print_value(Value value);
 
-void writeValueArray(ValueArray *array, Value value);
+void write_value_array(ValueArray *array, Value value);
 
-void initValueArray(ValueArray *array);
+void init_value_array(ValueArray *array);
 
-void freeValueArray(ValueArray *array);
+void free_value_array(ValueArray *array);
 
 #endif //FILANG_VALUE_H

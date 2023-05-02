@@ -10,45 +10,45 @@
 typedef struct {
     Token previous;
     Token current;
-    bool hasError;
-    bool panicMode;
+    bool has_error;
+    bool panic_mode;
 } Parser;
 
 Parser parser;
-Chunk *compileChunk;
+Chunk *compile_chunk;
 
 typedef enum {
-    PrecNone,       // None
-    PrecAssignment, // =
-    PrecTernary,    // ? :
-    PrecOr,         // or
-    PrecAnd,        // and
-    PrecBWOr,       // |
-    PrecXor,        // ^
-    PrecBWAnd,      // &
-    PrecEquals,     // == !=
-    PrecCompare,    // < > <= >=
-    PrecShift,      // << >>
-    PrecTerm,       // + -
-    PrecFactor,     // * / %
-    PrecUnary,      // - ! ~
-    PrecPow,        // **
-    PrecCall        // . ()
+    PREC_NONE,          // None
+    PREC_ASSIGNMENT,    // =
+    PREC_TERNARY,       // ? :
+    PREC_OR,            // or
+    PREC_AND,           // and
+    PREC_BW_OR,         // |
+    PREC_BW_XOR,        // ^
+    PREC_BW_AND,        // &
+    PREC_EQUALS,        // == !=
+    PREC_COMPARE,       // < > <= >=
+    PREC_BW_SHIFT,      // << >>
+    PREC_TERM,          // + -
+    PREC_FACTOR,        // * / %
+    PREC_UNARY,         // - ! ~
+    PREC_POW,           // **
+    PREC_CALL           // . ()
 } ParsePrec;
 
-typedef void (*ParseFn)(bool allowAssignment);
+typedef void (*parse_fn)(bool assignable);
 
 typedef struct {
-    ParseFn prefix;
-    ParseFn infix;
+    parse_fn prefix;
+    parse_fn infix;
     ParsePrec prec;
 } ParseRule;
 
 
-static void compileError(Token *token, const char *message) {
-    if (parser.panicMode) return;
-    parser.panicMode = true;
-    parser.hasError = true;
+static void compile_error(Token *token, const char *message) {
+    if (parser.panic_mode) return;
+    parser.panic_mode = true;
+    parser.has_error = true;
 
 
     fprintf(stderr, "[line %d] CompileError", token->line);
@@ -63,38 +63,38 @@ static void compileError(Token *token, const char *message) {
     fprintf(stderr, ": %s\n", message);
 }
 
-static void errorAtCurrent(const char *message) {
-    compileError(&parser.current, message);
+static void error_at_current(const char *message) {
+    compile_error(&parser.current, message);
 }
 
-static void errorAtPrevious(const char *message) {
-    compileError(&parser.previous, message);
+static void error_at_previous(const char *message) {
+    compile_error(&parser.previous, message);
 }
 
-static void emitByte(uint8_t byte) {
-    writeChunk(compileChunk, byte, parser.previous.line);
+static void emit_byte(uint8_t byte) {
+    write_chunk(compile_chunk, byte, parser.previous.line);
 }
 
-static void emitBytes(int count, ...) {
+static void emit_bytes(int count, ...) {
     va_list args;
     va_start(args, count);
     for (int i = 0; i < count; i++) {
-        emitByte(va_arg(args, int));
+        emit_byte(va_arg(args, int));
     }
     va_end(args);
 }
 
-static void emitConstant(Value value) {
-    int index = writeConstant(compileChunk, value);
+static void emit_constant(Value value) {
+    int index = write_constant(compile_chunk, value);
 
     if (index < 255) {
-        emitBytes(2, OP_CONSTANT, index);
+        emit_bytes(2, OP_CONSTANT, index);
     } else if (index < 65535) {
-        emitBytes(3, OP_CONSTANT_LONG, index & 0xFF, (index >> 8) & 0xFF);
+        emit_bytes(3, OP_CONSTANT_LONG, index & 0xFF, (index >> 8) & 0xFF);
     } else if (index < 16777215) {
-        emitBytes(4, OP_CONSTANT_LONG_LONG, index & 0xFF, (index >> 8) & 0xFF, (index >> 16) & 0xFF);
+        emit_bytes(4, OP_CONSTANT_LONG_LONG, index & 0xFF, (index >> 8) & 0xFF, (index >> 16) & 0xFF);
     } else {
-        errorAtPrevious("Too many constants in one chunk.");
+        error_at_previous("Too many constants in one chunk.");
         exit(1);
     }
 }
@@ -103,14 +103,14 @@ static void advance() {
     parser.previous = parser.current;
 
     while (true) {
-        parser.current = scanToken();
+        parser.current = scan_token();
         if (parser.current.type != TOKEN_ERROR) break;
-        errorAtCurrent(parser.current.start);
+        error_at_current(parser.current.start);
     }
 }
 
-static void skipToNextStatement() {
-    parser.panicMode = false;
+static void skip_to_next_statement() {
+    parser.panic_mode = false;
 
     while (parser.current.type != TOKEN_EOF) {
         if (parser.previous.type == TOKEN_SEMICOLON)
@@ -132,7 +132,7 @@ static void consume(TokenType expectedType, const char *errorMessage) {
     if (parser.current.type == expectedType) {
         advance();
     } else {
-        errorAtCurrent(errorMessage);
+        error_at_current(errorMessage);
     }
 }
 
@@ -145,41 +145,41 @@ static bool match(TokenType expectedType) {
 }
 
 
-static ParseRule *getRule(TokenType type);
+static ParseRule *get_rule(TokenType type);
 
 
-static void parsePrecedence(ParsePrec precedence) {
+static void parse_expression(ParsePrec precedence) {
     advance();
-    ParseFn prefix = getRule(parser.previous.type)->prefix;
+    parse_fn prefix = get_rule(parser.previous.type)->prefix;
 
     if (prefix == NULL) {
-        errorAtPrevious("expected expression.");
+        error_at_previous("expected expression.");
         return;
     }
 
-    bool allowAssignment = precedence <= PrecAssignment;
-    prefix(allowAssignment);
+    bool assignable = precedence <= PREC_ASSIGNMENT;
+    prefix(assignable);
 
     ParseRule *rule;
-    while (rule = getRule(parser.current.type), precedence <= rule->prec) {
-        ParseFn infix = rule->infix;
+    while (rule = get_rule(parser.current.type), precedence <= rule->prec) {
+        parse_fn infix = rule->infix;
         advance();
-        infix(allowAssignment);
+        infix(assignable);
     }
 
-    if (allowAssignment && match(TOKEN_EQUAL)) {
-        errorAtPrevious("Invalid assignment target.");
+    if (assignable && match(TOKEN_EQUAL)) {
+        error_at_previous("Invalid assignment target.");
     }
 }
 
 
 static void expression() {
-    parsePrecedence(PrecAssignment);
+    parse_expression(PREC_ASSIGNMENT);
 }
 
 static void print() {
-    parsePrecedence(PrecNone + 1);
-    emitByte(OP_PRINT);
+    parse_expression(PREC_NONE + 1);
+    emit_byte(OP_PRINT);
 }
 
 static void statement() {
@@ -188,63 +188,63 @@ static void statement() {
         consume(TOKEN_SEMICOLON, "expected ';' after print statement.");
     } else {
         expression();
-        emitByte(OP_POP);
+        emit_byte(OP_POP);
         consume(TOKEN_SEMICOLON, "expected ';' after expression.");
     }
 }
 
-static void varDefinition() {
+static void var_definition() {
     consume(TOKEN_IDENTIFIER, "expected identifier after variable definition.");
 
-    Value name = OBJECT_CAST(makeObjString(parser.previous.start, parser.previous.length));
+    Value name = OBJECT_CAST(make_objstring(parser.previous.start, parser.previous.length));
 
     if (match(TOKEN_EQUAL)) {
         expression();
     } else {
-        emitByte(OP_NIL);
+        emit_byte(OP_NIL);
     }
 
-    emitByte(OP_DEFINE_GLOBAL);
-    emitConstant(name);
+    emit_byte(OP_DEFINE_GLOBAL);
+    emit_constant(name);
 }
 
-static void identifier(bool allowAssignment) {
-    Value name = OBJECT_CAST(makeObjString(parser.previous.start, parser.previous.length));
+static void identifier(bool assignable) {
+    Value name = OBJECT_CAST(make_objstring(parser.previous.start, parser.previous.length));
 
-    if (match(TOKEN_EQUAL) && allowAssignment) {
+    if (match(TOKEN_EQUAL) && assignable) {
         expression();
-        emitByte(OP_SET_GLOBAL);
-        emitConstant(name);
+        emit_byte(OP_SET_GLOBAL);
+        emit_constant(name);
     } else {
-        emitByte(OP_GET_GLOBAL);
-        emitConstant(name);
+        emit_byte(OP_GET_GLOBAL);
+        emit_constant(name);
     }
 }
 
 static void definition() {
     if (match(TOKEN_VAR)) {
-        varDefinition();
+        var_definition();
         consume(TOKEN_SEMICOLON, "expected ';' after variable declaration.");
     } else {
         statement();
     }
 
-    if (parser.panicMode) skipToNextStatement();
+    if (parser.panic_mode) skip_to_next_statement();
 }
 
-static void unary(bool allowAssignment) {
-    TokenType operatorType = parser.previous.type;
-    parsePrecedence(PrecUnary);
+static void unary(bool assignable) {
+    TokenType operator_type = parser.previous.type;
+    parse_expression(PREC_UNARY);
 
-    switch (operatorType) {
+    switch (operator_type) {
         case TOKEN_NOT:
-            emitByte(OP_NOT);
+            emit_byte(OP_NOT);
             break;
         case TOKEN_MINUS:
-            emitByte(OP_NEGATE);
+            emit_byte(OP_NEGATE);
             break;
         case TOKEN_TILDE:
-            emitByte(OP_BW_NOT);
+            emit_byte(OP_BW_NOT);
         case TOKEN_PLUS:
             break;
         default:
@@ -252,256 +252,256 @@ static void unary(bool allowAssignment) {
     }
 }
 
-static void binary(bool allowAssignment) {
-    TokenType operatorType = parser.previous.type;
-    ParseRule *rule = getRule(operatorType);
-    parsePrecedence(rule->prec + 1);
+static void binary(bool assignable) {
+    TokenType operator_type = parser.previous.type;
+    ParseRule *rule = get_rule(operator_type);
+    parse_expression(rule->prec + 1);
 
-    switch (operatorType) {
+    switch (operator_type) {
         case TOKEN_PLUS:
-            emitByte(OP_ADD);
+            emit_byte(OP_ADD);
             break;
         case TOKEN_MINUS:
-            emitByte(OP_SUBTRACT);
+            emit_byte(OP_SUBTRACT);
             break;
         case TOKEN_STAR:
-            emitByte(OP_MULTIPLY);
+            emit_byte(OP_MULTIPLY);
             break;
         case TOKEN_SLASH:
-            emitByte(OP_DIVIDE);
+            emit_byte(OP_DIVIDE);
             break;
         case TOKEN_PERCENT:
-            emitByte(OP_MODULO);
+            emit_byte(OP_MODULO);
             break;
         case TOKEN_STAR_STAR:
-            emitByte(OP_POW);
+            emit_byte(OP_POW);
             break;
         case TOKEN_AND:
-            emitByte(OP_AND);
+            emit_byte(OP_AND);
             break;
         case TOKEN_OR:
-            emitByte(OP_OR);
+            emit_byte(OP_OR);
             break;
         case TOKEN_EQUAL_EQUAL:
-            emitByte(OP_EQUALS);
+            emit_byte(OP_EQUALS);
             break;
         case TOKEN_BANG_EQUAL:
-            emitBytes(2, OP_EQUALS, OP_NOT);
+            emit_bytes(2, OP_EQUALS, OP_NOT);
             break;
         case TOKEN_GREATER:
-            emitByte(OP_GREATER);
+            emit_byte(OP_GREATER);
             break;
         case TOKEN_GREATER_EQUAL:
-            emitBytes(2, OP_LESS, OP_NOT);
+            emit_bytes(2, OP_LESS, OP_NOT);
             break;
         case TOKEN_LESS:
-            emitByte(OP_LESS);
+            emit_byte(OP_LESS);
             break;
         case TOKEN_LESS_EQUAL:
-            emitBytes(2, OP_GREATER, OP_NOT);
+            emit_bytes(2, OP_GREATER, OP_NOT);
             break;
         case TOKEN_AMPERSAND:
-            emitByte(OP_BW_AND);
+            emit_byte(OP_BW_AND);
             break;
         case TOKEN_PIPE:
-            emitByte(OP_BW_OR);
+            emit_byte(OP_BW_OR);
             break;
         case TOKEN_CARET:
-            emitByte(OP_XOR);
+            emit_byte(OP_XOR);
             break;
         case TOKEN_LESS_LESS:
-            emitByte(OP_SHIFT_LEFT);
+            emit_byte(OP_SHIFT_LEFT);
             break;
         case TOKEN_GREATER_GREATER:
-            emitByte(OP_SHIFT_RIGHT);
+            emit_byte(OP_SHIFT_RIGHT);
             break;
         default:
             return;
     }
 }
 
-static void ternary(bool allowAssignment) {
-    parsePrecedence(PrecTernary);
+static void ternary(bool assignable) {
+    parse_expression(PREC_TERNARY);
     consume(TOKEN_COLONS, "expected ':' after '?' operator.");
-    parsePrecedence(PrecTernary);
-    emitByte(OP_TERNARY);
+    parse_expression(PREC_TERNARY);
+    emit_byte(OP_TERNARY);
 }
 
-static void grouping(bool allowAssignment) {
+static void grouping(bool assignable) {
     expression();
     consume(TOKEN_RIGHT_PAREN, "expected ')' after expression.");
 }
 
-static void number(bool allowAssignment) {
+static void number(bool assignable) {
     if (parser.previous.type == TOKEN_INTEGER) {
         int64_t value = strtol(parser.previous.start, NULL, 10);
-        emitConstant(INTEGER_CAST(value));
+        emit_constant(INTEGER_CAST(value));
         return;
     } else {
         double value = strtod(parser.previous.start, NULL);
-        emitConstant(FLOAT_CAST(value));
+        emit_constant(FLOAT_CAST(value));
     }
 }
 
-static void escapeString(char *chars, int *length) {
-#define escapeChar(r) chars[i] = r; memmove(chars + i + 1, chars + i + 2, *length - i - 1); (*length)--
+static void escape_string(char *chars, int *length) {
+#define ESCAPE_CHAR(r) chars[i] = r; memmove(chars + i + 1, chars + i + 2, *length - i - 1); (*length)--
 
     for (int i = 0; i < *length - 1; i++) {
         if (chars[i] == '\\') {
             switch (chars[i + 1]) {
                 case 'n':
-                escapeChar('\n');
+                ESCAPE_CHAR('\n');
                     break;
                 case 't':
-                escapeChar('\t');
+                ESCAPE_CHAR('\t');
                     break;
                 case 'r':
-                escapeChar('\r');
+                ESCAPE_CHAR('\r');
                     break;
                 case 'a':
-                escapeChar('\a');
+                ESCAPE_CHAR('\a');
                     break;
                 case 'b':
-                escapeChar('\b');
+                ESCAPE_CHAR('\b');
                     break;
                 case 'v':
-                escapeChar('\v');
+                ESCAPE_CHAR('\v');
                     break;
                 case 'f':
-                escapeChar('\f');
+                ESCAPE_CHAR('\f');
                     break;
                 case '\\':
-                escapeChar('\\');
+                ESCAPE_CHAR('\\');
                     break;
                 case '\'':
-                escapeChar('\'');
+                ESCAPE_CHAR('\'');
                     break;
                 case '\"':
-                escapeChar('\"');
+                ESCAPE_CHAR('\"');
                     break;
                 case 'x':
                     if (*length - i < 4) {
-                        errorAtPrevious("invalid escape sequence.");
+                        error_at_previous("invalid escape sequence.");
                     }
 
                     char hex[3] = {chars[i + 2], chars[i + 3], '\0'};
 
                     char *end;
-                    long hexValue = strtol(hex, &end, 16);
+                    long hex_value = strtol(hex, &end, 16);
 
                     if (*end != '\0') {
-                        errorAtPrevious("invalid escape sequence.");
+                        error_at_previous("invalid escape sequence.");
                     }
 
-                    chars[i] = (char) hexValue;
+                    chars[i] = (char) hex_value;
                     memmove(chars + i + 1, chars + i + 4, *length - i - 3);
                     (*length) -= 3;
                     break;
             }
         }
     }
-#undef replaceChar
+#undef ESCAPE_CHAR
 }
 
-static void string(bool allowAssignment) {
-    ObjString *string = makeObjString(parser.previous.start + 1, parser.previous.length - 2);
+static void string(bool assignable) {
+    ObjString *string = make_objstring(parser.previous.start + 1, parser.previous.length - 2);
 
-    escapeString(string->chars, &string->length);
+    escape_string(string->chars, &string->length);
 
-    emitConstant(OBJECT_CAST(string));
+    emit_constant(OBJECT_CAST(string));
 }
 
-static void clock(bool allowAssignment) {
-    emitByte(OP_CLOCK);
+static void clock(bool assignable) {
+    emit_byte(OP_CLOCK);
 }
 
-static void typeOf(bool allowAssignment) {
-    parsePrecedence(PrecNone + 1);
-    emitByte(OP_TYPEOF);
+static void type_of(bool assignable) {
+    parse_expression(PREC_NONE + 1);
+    emit_byte(OP_TYPEOF);
 }
 
-static void boolean(bool allowAssignment) {
+static void boolean(bool assignable) {
     if (parser.previous.type == TOKEN_TRUE) {
-        emitByte(OP_TRUE);
+        emit_byte(OP_TRUE);
     } else {
-        emitByte(OP_FALSE);
+        emit_byte(OP_FALSE);
     }
 }
 
-static void nil(bool allowAssignment) {
-    emitByte(OP_NIL);
+static void nil(bool assignable) {
+    emit_byte(OP_NIL);
 }
 
-ParseRule parseRules[] = {
-        [TOKEN_LEFT_PAREN]  =   {grouping, NULL, PrecNone},
-        [TOKEN_RIGHT_PAREN] =   {NULL, NULL, PrecNone},
-        [TOKEN_LEFT_BRACE]  =   {NULL, NULL, PrecNone},
-        [TOKEN_RIGHT_BRACE] =   {NULL, NULL, PrecNone},
-        [TOKEN_COMMA]       =   {NULL, NULL, PrecNone},
-        [TOKEN_DOT]         =   {NULL, NULL, PrecCall},
-        [TOKEN_MINUS]       =   {unary, binary, PrecTerm},
-        [TOKEN_PLUS]        =   {unary, binary, PrecTerm},
-        [TOKEN_SEMICOLON]   =   {NULL, NULL, PrecNone},
-        [TOKEN_SLASH]       =   {NULL, binary, PrecFactor},
-        [TOKEN_STAR]        =   {NULL, binary, PrecFactor},
-        [TOKEN_PERCENT]     =   {NULL, binary, PrecFactor},
-        [TOKEN_STAR_STAR]         =   {NULL, binary, PrecPow},
-        [TOKEN_AND]         =   {NULL, binary, PrecAnd},
-        [TOKEN_OR]          =   {NULL, binary, PrecOr},
-        [TOKEN_NOT]        =   {unary, NULL, PrecUnary},
-        [TOKEN_PRINT]       =   {NULL, NULL, PrecNone},
-        [TOKEN_COLONS]      =   {NULL, NULL, PrecNone},
-        [TOKEN_AMPERSAND]   =   {NULL, binary, PrecBWAnd},
-        [TOKEN_PIPE]        =   {NULL, binary, PrecBWOr},
-        [TOKEN_CARET]       =   {NULL, binary, PrecXor},
-        [TOKEN_LESS_LESS]   =   {NULL, binary, PrecShift},
-        [TOKEN_GREATER_GREATER]   =   {NULL, binary, PrecShift},
-        [TOKEN_TILDE]       =   {unary, NULL, PrecUnary},
-        [TOKEN_INTERROGATION] = {NULL, ternary, PrecTernary},
-        [TOKEN_BANG_EQUAL]  =   {NULL, binary, PrecEquals},
-        [TOKEN_EQUAL]       =   {NULL, NULL, PrecAssignment},
-        [TOKEN_EQUAL_EQUAL] =   {NULL, binary, PrecEquals},
-        [TOKEN_GREATER]     =   {NULL, binary, PrecCompare},
-        [TOKEN_GREATER_EQUAL] = {NULL, binary, PrecCompare},
-        [TOKEN_LESS]        =   {NULL, binary, PrecCompare},
-        [TOKEN_LESS_EQUAL]  =   {NULL, binary, PrecCompare},
-        [TOKEN_IDENTIFIER]  =   {identifier, NULL, PrecNone},
-        [TOKEN_STRING]      =   {string, NULL, PrecNone},
-        [TOKEN_INTEGER]      =   {number, NULL, PrecNone},
-        [TOKEN_FLOAT]      =   {number, NULL, PrecNone},
-        [TOKEN_RETURN]      =   {NULL, NULL, PrecNone},
-        [TOKEN_IF]          =   {NULL, NULL, PrecNone},
-        [TOKEN_ELSE]        =   {NULL, NULL, PrecNone},
-        [TOKEN_FN]          =   {NULL, NULL, PrecNone},
-        [TOKEN_VAR]         =   {NULL, NULL, PrecNone},
-        [TOKEN_EOF]         =   {NULL, NULL, PrecNone},
-        [TOKEN_TRUE]        =   {boolean, NULL, PrecNone},
-        [TOKEN_FALSE]       =   {boolean, NULL, PrecNone},
-        [TOKEN_NIL]         =   {nil, NULL, PrecNone},
-        [TOKEN_ERROR]       =   {NULL, NULL, PrecNone},
-        [TOKEN_CLOCK]      =   {clock, NULL, PrecNone},
-        [TOKEN_TYPEOF]    =   {typeOf, NULL, PrecNone},
+ParseRule parse_rules[] = {
+        [TOKEN_LEFT_PAREN]  =   {grouping, NULL, PREC_NONE},
+        [TOKEN_RIGHT_PAREN] =   {NULL, NULL, PREC_NONE},
+        [TOKEN_LEFT_BRACE]  =   {NULL, NULL, PREC_NONE},
+        [TOKEN_RIGHT_BRACE] =   {NULL, NULL, PREC_NONE},
+        [TOKEN_COMMA]       =   {NULL, NULL, PREC_NONE},
+        [TOKEN_DOT]         =   {NULL, NULL, PREC_CALL},
+        [TOKEN_MINUS]       =   {unary, binary, PREC_TERM},
+        [TOKEN_PLUS]        =   {unary, binary, PREC_TERM},
+        [TOKEN_SEMICOLON]   =   {NULL, NULL, PREC_NONE},
+        [TOKEN_SLASH]       =   {NULL, binary, PREC_FACTOR},
+        [TOKEN_STAR]        =   {NULL, binary, PREC_FACTOR},
+        [TOKEN_PERCENT]     =   {NULL, binary, PREC_FACTOR},
+        [TOKEN_STAR_STAR]         =   {NULL, binary, PREC_POW},
+        [TOKEN_AND]         =   {NULL, binary, PREC_AND},
+        [TOKEN_OR]          =   {NULL, binary, PREC_OR},
+        [TOKEN_NOT]        =   {unary, NULL, PREC_UNARY},
+        [TOKEN_PRINT]       =   {NULL, NULL, PREC_NONE},
+        [TOKEN_COLONS]      =   {NULL, NULL, PREC_NONE},
+        [TOKEN_AMPERSAND]   =   {NULL, binary, PREC_BW_AND},
+        [TOKEN_PIPE]        =   {NULL, binary, PREC_BW_OR},
+        [TOKEN_CARET]       =   {NULL, binary, PREC_BW_XOR},
+        [TOKEN_LESS_LESS]   =   {NULL, binary, PREC_BW_SHIFT},
+        [TOKEN_GREATER_GREATER]   =   {NULL, binary, PREC_BW_SHIFT},
+        [TOKEN_TILDE]       =   {unary, NULL, PREC_UNARY},
+        [TOKEN_INTERROGATION] = {NULL, ternary, PREC_TERNARY},
+        [TOKEN_BANG_EQUAL]  =   {NULL, binary, PREC_EQUALS},
+        [TOKEN_EQUAL]       =   {NULL, NULL, PREC_ASSIGNMENT},
+        [TOKEN_EQUAL_EQUAL] =   {NULL, binary, PREC_EQUALS},
+        [TOKEN_GREATER]     =   {NULL, binary, PREC_COMPARE},
+        [TOKEN_GREATER_EQUAL] = {NULL, binary, PREC_COMPARE},
+        [TOKEN_LESS]        =   {NULL, binary, PREC_COMPARE},
+        [TOKEN_LESS_EQUAL]  =   {NULL, binary, PREC_COMPARE},
+        [TOKEN_IDENTIFIER]  =   {identifier, NULL, PREC_NONE},
+        [TOKEN_STRING]      =   {string, NULL, PREC_NONE},
+        [TOKEN_INTEGER]      =   {number, NULL, PREC_NONE},
+        [TOKEN_FLOAT]      =   {number, NULL, PREC_NONE},
+        [TOKEN_RETURN]      =   {NULL, NULL, PREC_NONE},
+        [TOKEN_IF]          =   {NULL, NULL, PREC_NONE},
+        [TOKEN_ELSE]        =   {NULL, NULL, PREC_NONE},
+        [TOKEN_FN]          =   {NULL, NULL, PREC_NONE},
+        [TOKEN_VAR]         =   {NULL, NULL, PREC_NONE},
+        [TOKEN_EOF]         =   {NULL, NULL, PREC_NONE},
+        [TOKEN_TRUE]        =   {boolean, NULL, PREC_NONE},
+        [TOKEN_FALSE]       =   {boolean, NULL, PREC_NONE},
+        [TOKEN_NIL]         =   {nil, NULL, PREC_NONE},
+        [TOKEN_ERROR]       =   {NULL, NULL, PREC_NONE},
+        [TOKEN_CLOCK]      =   {clock, NULL, PREC_NONE},
+        [TOKEN_TYPEOF]    =   {type_of, NULL, PREC_NONE},
 };
 
 
-static ParseRule *getRule(TokenType type) {
-    return &parseRules[type];
+static ParseRule *get_rule(TokenType type) {
+    return &parse_rules[type];
 }
 
 
 bool compile(Chunk *chunk, const char *source) {
-    initScanner(source);
-    compileChunk = chunk;
+    init_scanner(source);
+    compile_chunk = chunk;
 
-    parser.hasError = false;
-    parser.panicMode = false;
+    parser.has_error = false;
+    parser.panic_mode = false;
 
     advance();
     while (!match(TOKEN_EOF)) {
         definition();
     }
 
-    emitByte(OP_RETURN);
+    emit_byte(OP_RETURN);
 
-    return !parser.hasError;
+    return !parser.has_error;
 }

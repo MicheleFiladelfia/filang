@@ -3,7 +3,7 @@
 #include "memory.h"
 
 
-void initChunk(Chunk *chunk) {
+void init_chunk(Chunk *chunk) {
     chunk->code = NULL;
     chunk->capacity = 0;
     chunk->count = 0;
@@ -11,17 +11,17 @@ void initChunk(Chunk *chunk) {
     chunk->lines.capacity = 0;
     chunk->lines.count = 0;
 
-    initValueArray(&chunk->constants);
+    init_value_array(&chunk->constants);
 }
 
-void freeChunk(Chunk *chunk) {
+void free_chunk(Chunk *chunk) {
     FREE_ARRAY(chunk->code, uint8_t, chunk->capacity);
     FREE_ARRAY(chunk->lines.ends, int, chunk->capacity);
-    freeValueArray(&chunk->constants);
-    initChunk(chunk);
+    free_value_array(&chunk->constants);
+    init_chunk(chunk);
 }
 
-void writeChunk(Chunk *chunk, uint8_t byte, int line) {
+void write_chunk(Chunk *chunk, uint8_t byte, int line) {
     if (chunk->count + 1 >= chunk->capacity) {
         int oldCapacity = chunk->capacity;
         chunk->capacity = GROW_ARRAY_CAPACITY(chunk->capacity);
@@ -30,8 +30,8 @@ void writeChunk(Chunk *chunk, uint8_t byte, int line) {
 
     chunk->code[chunk->count] = byte;
 
-    if(line > chunk->lines.count){
-         if (chunk->lines.count + 1 >= chunk->lines.capacity) {
+    if (line > chunk->lines.count) {
+        if (chunk->lines.count + 1 >= chunk->lines.capacity) {
             int oldCapacity = chunk->lines.capacity;
             chunk->lines.capacity = GROW_ARRAY_CAPACITY(chunk->lines.capacity);
             chunk->lines.ends = GROW_ARRAY(chunk->lines.ends, int, oldCapacity, chunk->lines.capacity);
@@ -44,7 +44,7 @@ void writeChunk(Chunk *chunk, uint8_t byte, int line) {
     chunk->count++;
 }
 
-int writeConstant(Chunk *chunk, Value value) {
-    writeValueArray(&chunk->constants, value);
+int write_constant(Chunk *chunk, Value value) {
+    write_value_array(&chunk->constants, value);
     return chunk->constants.count - 1;
 }

@@ -57,12 +57,12 @@ typedef struct {
     ValueArray constants;
 } Chunk;
 
-void initChunk(Chunk *chunk);
+void init_chunk(Chunk *chunk);
 
-void freeChunk(Chunk *chunk);
+void free_chunk(Chunk *chunk);
 
-void writeChunk(Chunk *chunk, uint8_t byte, int line);
+void write_chunk(Chunk *chunk, uint8_t byte, int line);
 
-int writeConstant(Chunk *chunk, Value value);
+int write_constant(Chunk *chunk, Value value);
 
 #endif //FILANG_CHUNK_H

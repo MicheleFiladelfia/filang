@@ -4,28 +4,28 @@
 #include <stddef.h>
 #include <stdio.h>
 
-void initValueArray(ValueArray *array) {
+void init_value_array(ValueArray *array) {
     array->values = NULL;
     array->capacity = 0;
     array->count = 0;
 }
 
-void writeValueArray(ValueArray *array, Value value) {
+void write_value_array(ValueArray *array, Value value) {
     if (array->count + 1 >= array->capacity) {
-        int oldCapacity = array->capacity;
+        int old_capacity = array->capacity;
         array->capacity = GROW_ARRAY_CAPACITY(array->capacity);
-        array->values = GROW_ARRAY(array->values, Value, oldCapacity, array->capacity);
+        array->values = GROW_ARRAY(array->values, Value, old_capacity, array->capacity);
     }
 
     array->values[(array->count)++] = value;
 }
 
-void freeValueArray(ValueArray *array) {
+void free_value_array(ValueArray *array) {
     FREE_ARRAY(array->values, Value, array->capacity);
-    initValueArray(array);
+    init_value_array(array);
 }
 
-void printValue(Value value) {
+void print_value(Value value) {
     switch (value.type) {
         case VAL_BOOL:
             printf(value.as.integer == 0 ? "false" : "true");
@@ -43,7 +43,7 @@ void printValue(Value value) {
             if (IS_STRING(value))
                 printf("%s", ((ObjString *) value.as.object)->chars);
             else
-                printf("%s", typeToString(value));
+                printf("%s", type_to_string(value));
             break;
     }
 }

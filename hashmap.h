@@ -20,23 +20,23 @@ typedef struct {
     int count;
     int capacity;
     Entry *entries;
-} HashMap;
+} Hashmap;
 
-uint32_t hashString(const char *key, int length);
+uint32_t hash_string(const char *key, int length);
 
-void initHashMap(HashMap *map);
+void init_hashmap(Hashmap *map);
 
-void freeHashMap(HashMap *map);
+void free_hashmap(Hashmap *map);
 
-bool addEntry(HashMap *map, Value key, Value value);
+bool add_entry(Hashmap *map, Value key, Value value);
 
-Entry *getEntry(HashMap *map, Value key);
+Entry *get_entry(Hashmap *map, Value key);
 
-void eraseEntry(HashMap *map, Value key);
+void erase_entry(Hashmap *map, Value key);
 
-bool contains(HashMap *map, Value key);
+bool contains(Hashmap *map, Value key);
 
-ObjString *getStringEntry(HashMap *map, const char *key, int length, uint32_t hash);
+ObjString *get_string_entry(Hashmap *map, const char *key, int length, uint32_t hash);
 
 #define HASHMAP_MAX_LOAD 0.57
 #define IS_EMPTY(entry) ((entry).key.type == VAL_NIL)
