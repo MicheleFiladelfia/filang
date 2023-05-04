@@ -39,7 +39,7 @@ bool contains(Hashmap *map, Value key);
 ObjString *get_string_entry(Hashmap *map, const char *key, int length, uint32_t hash);
 
 #define HASHMAP_MAX_LOAD 0.57
-#define IS_EMPTY(entry) ((entry).key.type == VAL_NIL)
+#define IS_EMPTY(entry) ((entry).key.type == TYPE_NIL)
 
 
 #endif //FILANG_HASHMAP_H

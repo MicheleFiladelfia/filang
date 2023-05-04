@@ -10,15 +10,15 @@
 
 char *type_to_string(Value value) {
     switch (value.type) {
-        case VAL_BOOL:
+        case TYPE_BOOL:
             return "<builtin 'bool'>";
-        case VAL_FLOAT:
+        case TYPE_DECIMAL:
             return "<builtin 'float'>";
-        case VAL_INTEGER:
+        case TYPE_INTEGER:
             return "<builtin 'integer'>";
-        case VAL_NIL:
+        case TYPE_NIL:
             return "<builtin 'nil'>";
-        case VAL_OBJECT:
+        case TYPE_OBJECT:
             if (IS_STRING(value))
                 return "<class 'String'>";
             else
@@ -43,24 +43,24 @@ static char *double_to_string(double value) {
 ObjString *value_to_string(Value value) {
     char *value_as_string;
     switch (value.type) {
-        case VAL_INTEGER:
+        case TYPE_INTEGER:
             value_as_string = long_to_string(value.as.integer);
             return make_objstring(value_as_string, (int) strlen(value_as_string));
-        case VAL_FLOAT:
-            value_as_string = double_to_string(value.as.floatingPoint);
+        case TYPE_DECIMAL:
+            value_as_string = double_to_string(value.as.decimal);
             return make_objstring(value_as_string, (int) strlen(value_as_string));
-        case VAL_BOOL:
+        case TYPE_BOOL:
             if (value.as.integer == 0) {
                 return make_objstring("false", 6);
             } else {
                 return make_objstring("true", 5);
             }
-        case VAL_OBJECT:
+        case TYPE_OBJECT:
             if (IS_STRING(value))
                 return ((ObjString *) value.as.object);
             else
                 return make_objstring(type_to_string(value), (int) strlen(type_to_string(value)));
-        case VAL_NIL:
+        case TYPE_NIL:
         default:
             return make_objstring("nil", 4);
     }

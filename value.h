@@ -8,11 +8,11 @@
 
 
 typedef enum {
-    VAL_BOOL,
-    VAL_FLOAT,
-    VAL_INTEGER,
-    VAL_OBJECT,
-    VAL_NIL
+    TYPE_BOOL,
+    TYPE_DECIMAL,
+    TYPE_INTEGER,
+    TYPE_OBJECT,
+    TYPE_NIL
 } ValueType;
 
 
@@ -21,7 +21,7 @@ typedef struct Object Object;
 typedef struct {
     ValueType type;
     union {
-        double floatingPoint;
+        double decimal;
         int64_t integer;
         Object *object;
     } as;
@@ -42,18 +42,18 @@ struct Object {
 };
 
 
-#define IS_OBJECT(value) ((value).type == VAL_OBJECT)
-#define IS_BOOL(value) ((value).type == VAL_BOOL)
-#define IS_FLOAT(value) ((value).type == VAL_FLOAT)
-#define IS_INTEGER(value) (((value).type == VAL_INTEGER) || IS_BOOL(value))
+#define IS_OBJECT(value) ((value).type == TYPE_OBJECT)
+#define IS_BOOL(value) ((value).type == TYPE_BOOL)
+#define IS_FLOAT(value) ((value).type == TYPE_DECIMAL)
+#define IS_INTEGER(value) (((value).type == TYPE_INTEGER) || IS_BOOL(value))
 #define IS_NUMERIC(value) (IS_FLOAT(value) || IS_INTEGER(value) || IS_BOOL(value))
 #define IS_NIL(value) ((value).type == VAL_NIL)
 
-#define OBJECT_CAST(value) ((Value){VAL_OBJECT, {.object = (Object *) (value)}})
-#define BOOL_CAST(value) ((value) ? (Value){VAL_BOOL, {.integer = true}} : (Value){VAL_BOOL, {.integer = false}})
-#define FLOAT_CAST(value) ((Value){VAL_FLOAT, {.floatingPoint = (double) value}})
-#define INTEGER_CAST(value) ((Value){VAL_INTEGER, {.integer = (int64_t) value}})
-#define NIL ((Value){VAL_NIL, {.integer = 0}})
+#define OBJECT_CAST(value) ((Value){TYPE_OBJECT, {.object = (Object *) (value)}})
+#define BOOL_CAST(value) ((value) ? (Value){TYPE_BOOL, {.integer = true}} : (Value){TYPE_BOOL, {.integer = false}})
+#define DECIMAL_CAST(value) ((Value){TYPE_DECIMAL, {.decimal = (double) value}})
+#define INTEGER_CAST(value) ((Value){TYPE_INTEGER, {.integer = (int64_t) value}})
+#define NIL ((Value){TYPE_NIL, {.integer = 0}})
 
 #define AS_OBJECT(value) ((value).as.object)
 

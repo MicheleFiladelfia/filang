@@ -27,19 +27,19 @@ void free_value_array(ValueArray *array) {
 
 void print_value(Value value) {
     switch (value.type) {
-        case VAL_BOOL:
+        case TYPE_BOOL:
             printf(value.as.integer == 0 ? "false" : "true");
             break;
-        case VAL_FLOAT:
-            printf("%.15g", value.as.floatingPoint);
+        case TYPE_DECIMAL:
+            printf("%.15g", value.as.decimal);
             break;
-        case VAL_INTEGER:
+        case TYPE_INTEGER:
             printf("%ld", value.as.integer);
             break;
-        case VAL_NIL:
+        case TYPE_NIL:
             printf("nil");
             break;
-        case VAL_OBJECT:
+        case TYPE_OBJECT:
             if (IS_STRING(value))
                 printf("%s", ((ObjString *) value.as.object)->chars);
             else

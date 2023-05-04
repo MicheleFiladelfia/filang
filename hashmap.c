@@ -41,12 +41,12 @@ uint32_t hash_int(int64_t key) {
 static bool compare(Value a, Value b) {
     if (a.type != b.type) return false;
     switch (a.type) {
-        case VAL_BOOL:
-        case VAL_INTEGER:
+        case TYPE_BOOL:
+        case TYPE_INTEGER:
             return a.as.integer == b.as.integer;
-        case VAL_FLOAT:
-            return a.as.floatingPoint == b.as.floatingPoint;
-        case VAL_OBJECT:
+        case TYPE_DECIMAL:
+            return a.as.decimal == b.as.decimal;
+        case TYPE_OBJECT:
             if (IS_STRING(a) && IS_STRING(b)) {
                 return AS_STRING(a) == AS_STRING(b);
             }
@@ -58,12 +58,12 @@ static bool compare(Value a, Value b) {
 
 uint32_t get_hash(Value val) {
     switch (val.type) {
-        case VAL_BOOL:
-        case VAL_INTEGER:
+        case TYPE_BOOL:
+        case TYPE_INTEGER:
             return hash_int(val.as.integer);
-        case VAL_FLOAT:
-            return hash_double(val.as.floatingPoint);
-        case VAL_OBJECT:
+        case TYPE_DECIMAL:
+            return hash_double(val.as.decimal);
+        case TYPE_OBJECT:
             if (IS_STRING(val)) {
                 return AS_STRING(val)->hash;
             }
@@ -90,14 +90,14 @@ void grow_capacity(Hashmap *map) {
     map->capacity = GROW_ARRAY_CAPACITY(old_capacity);
     map->entries = ALLOCATE(Entry, map->capacity);
     for (int i = 0; i < map->capacity; i++) {
-        map->entries[i].key.type = VAL_NIL;
+        map->entries[i].key.type = TYPE_NIL;
         map->entries[i].value = NIL;
     }
 
     map->count = 0;
     for (int i = 0; i < (int) old_capacity; i++) {
         Entry *entry = &old_entries[i];
-        if (entry->key.type == VAL_NIL) continue;
+        if (entry->key.type == TYPE_NIL) continue;
         add_entry(map, entry->key, entry->value);
     }
     FREE_ARRAY(old_entries, Entry, old_capacity);
@@ -105,7 +105,7 @@ void grow_capacity(Hashmap *map) {
 
 static void remove_by_index(Hashmap *map, uint32_t index) {
     while (true) {
-        map->entries[index].key.type = VAL_NIL;
+        map->entries[index].key.type = TYPE_NIL;
         uint32_t next = (index + 1) & (map->capacity - 1);
         if (IS_EMPTY(map->entries[next])) return;
         uint32_t desired = get_hash(map->entries[next].key) & (map->capacity - 1);

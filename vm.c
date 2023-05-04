@@ -48,15 +48,15 @@ static Value *peek_pointer(int count) {
 
 static bool is_true(Value value) {
     switch (value.type) {
-        case VAL_BOOL:
+        case TYPE_BOOL:
             return value.as.integer != 0;
-        case VAL_NIL:
+        case TYPE_NIL:
             return false;
-        case VAL_INTEGER:
+        case TYPE_INTEGER:
             return value.as.integer != 0;
-        case VAL_FLOAT:
-            return value.as.floatingPoint != 0;
-        case VAL_OBJECT:
+        case TYPE_DECIMAL:
+            return value.as.decimal != 0;
+        case TYPE_OBJECT:
             if (IS_STRING(value))
                 return ((ObjString *) value.as.object)->length != 0;
             else
@@ -134,20 +134,20 @@ InterpretResult execute() {
                 b = (double)pop().as.integer;                                                                                                   \
             }                                                                                                                                   \
             else {                                                                                                                              \
-                b = pop().as.floatingPoint;                                                                                                     \
+                b = pop().as.decimal;                                                                                                           \
             }                                                                                                                                   \
                                                                                                                                                 \
             if (IS_INTEGER(peek(0))) {                                                                                                          \
                 a = (double)pop().as.integer;                                                                                                   \
             }                                                                                                                                   \
             else {                                                                                                                              \
-                a = pop().as.floatingPoint;                                                                                                     \
+                a = pop().as.decimal;                                                                                                           \
             }                                                                                                                                   \
                                                                                                                                                 \
             if (castBool)                                                                                                                       \
                 push(BOOL_CAST(a operator b));                                                                                                  \
             else                                                                                                                                \
-                push(FLOAT_CAST(a operator b));                                                                                                 \
+                push(DECIMAL_CAST(a operator b));                                                                                               \
         }                                                                                                                                       \
     } while (false)
 
@@ -208,7 +208,7 @@ InterpretResult execute() {
                 break;
             case OP_DIVIDE:
                 if ((IS_INTEGER(peek(0)) && peek(0).as.integer == 0) ||
-                    (IS_FLOAT(peek(0)) && peek(0).as.floatingPoint == 0.0)) {
+                    (IS_FLOAT(peek(0)) && peek(0).as.decimal == 0.0)) {
                     runtime_error("division by zero.");
                     return RUNTIME_ERROR;
                 }
@@ -233,13 +233,13 @@ InterpretResult execute() {
                 if (IS_INTEGER(peek(0))) {
                     b = (double) pop().as.integer;
                 } else {
-                    b = pop().as.floatingPoint;
+                    b = pop().as.decimal;
                 }
 
                 if (IS_INTEGER(peek(0))) {
                     a = (double) pop().as.integer;
                 } else {
-                    a = pop().as.floatingPoint;
+                    a = pop().as.decimal;
                 }
 
                 double result = pow(a, b);
@@ -247,7 +247,7 @@ InterpretResult execute() {
                 if (floor(result) == result) {
                     push(INTEGER_CAST((int64_t) result));
                 } else {
-                    push(FLOAT_CAST(result));
+                    push(DECIMAL_CAST(result));
                 }
                 break;
             case OP_PRINT:
@@ -270,46 +270,46 @@ InterpretResult execute() {
                 break;
             case OP_EQUALS:
                 switch (peek(0).type) {
-                    case VAL_BOOL:
-                    case VAL_INTEGER:
+                    case TYPE_BOOL:
+                    case TYPE_INTEGER:
                         switch (peek(1).type) {
-                            case VAL_BOOL:
-                            case VAL_INTEGER:
+                            case TYPE_BOOL:
+                            case TYPE_INTEGER:
                                 push(BOOL_CAST(pop().as.integer == pop().as.integer));
                                 break;
-                            case VAL_FLOAT:
-                                push(BOOL_CAST(pop().as.integer == pop().as.floatingPoint));
+                            case TYPE_DECIMAL:
+                                push(BOOL_CAST(pop().as.integer == pop().as.decimal));
                                 break;
-                            case VAL_OBJECT:
-                            case VAL_NIL:
+                            case TYPE_OBJECT:
+                            case TYPE_NIL:
                                 push(BOOL_CAST(false));
                                 break;
                         }
                         break;
-                    case VAL_FLOAT:
+                    case TYPE_DECIMAL:
                         switch (peek(1).type) {
-                            case VAL_BOOL:
-                            case VAL_INTEGER:
-                                push(BOOL_CAST(pop().as.floatingPoint == pop().as.integer));
+                            case TYPE_BOOL:
+                            case TYPE_INTEGER:
+                                push(BOOL_CAST(pop().as.decimal == pop().as.integer));
                                 break;
-                            case VAL_FLOAT:
-                                push(BOOL_CAST(pop().as.floatingPoint == pop().as.floatingPoint));
+                            case TYPE_DECIMAL:
+                                push(BOOL_CAST(pop().as.decimal == pop().as.decimal));
                                 break;
-                            case VAL_OBJECT:
-                            case VAL_NIL:
+                            case TYPE_OBJECT:
+                            case TYPE_NIL:
                                 push(BOOL_CAST(false));
                                 break;
                         }
                         break;
-                    case VAL_OBJECT:
+                    case TYPE_OBJECT:
                         if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
                             push(BOOL_CAST(AS_STRING(peek(0)) == AS_STRING(peek(1))));
                         } else {
                             push(BOOL_CAST(false));
                         }
                         break;
-                    case VAL_NIL:
-                        push(BOOL_CAST(peek(1).type == VAL_NIL));
+                    case TYPE_NIL:
+                        push(BOOL_CAST(peek(1).type == TYPE_NIL));
                         break;
                 }
                 break;
@@ -335,7 +335,7 @@ InterpretResult execute() {
                 if (IS_INTEGER(peek(0))) {
                     *peek_pointer(0) = INTEGER_CAST(-peek(0).as.integer);
                 } else if (IS_FLOAT(peek(0))) {
-                    *peek_pointer(0) = FLOAT_CAST(-peek(0).as.floatingPoint);
+                    *peek_pointer(0) = DECIMAL_CAST(-peek(0).as.decimal);
                 } else {
                     runtime_error("unsupported operand type for %s: %s.", "-", type_to_string(peek(0)));
                     return RUNTIME_ERROR;
@@ -423,7 +423,7 @@ InterpretResult execute() {
 
                 break;
             case OP_CLOCK:
-                push(FLOAT_CAST((double) clock() / CLOCKS_PER_SEC));
+                push(DECIMAL_CAST((double) clock() / CLOCKS_PER_SEC));
                 break;
             case OP_TYPEOF:
                 cstr = type_to_string(pop());

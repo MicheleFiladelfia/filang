@@ -339,7 +339,7 @@ static void number(bool assignable) {
         return;
     } else {
         double value = strtod(parser.previous.start, NULL);
-        emit_constant(FLOAT_CAST(value));
+        emit_constant(DECIMAL_CAST(value));
     }
 }
 
