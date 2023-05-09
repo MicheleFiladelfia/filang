@@ -196,7 +196,7 @@ static void statement() {
 static void var_definition() {
     consume(TOKEN_IDENTIFIER, "expected identifier after variable definition.");
 
-    Value name = OBJECT_CAST(make_objstring(parser.previous.start, parser.previous.length));
+    Value name = NEW_OBJECT(make_objstring(parser.previous.start, parser.previous.length));
 
     if (match(TOKEN_EQUAL)) {
         expression();
@@ -209,7 +209,7 @@ static void var_definition() {
 }
 
 static void identifier(bool assignable) {
-    Value name = OBJECT_CAST(make_objstring(parser.previous.start, parser.previous.length));
+    Value name = NEW_OBJECT(make_objstring(parser.previous.start, parser.previous.length));
 
     if (match(TOKEN_EQUAL) && assignable) {
         expression();
@@ -335,11 +335,11 @@ static void grouping(bool assignable) {
 static void number(bool assignable) {
     if (parser.previous.type == TOKEN_INTEGER) {
         int64_t value = strtol(parser.previous.start, NULL, 10);
-        emit_constant(INTEGER_CAST(value));
+        emit_constant(NEW_INTEGER(value));
         return;
     } else {
         double value = strtod(parser.previous.start, NULL);
-        emit_constant(DECIMAL_CAST(value));
+        emit_constant(NEW_DECIMAL(value));
     }
 }
 
@@ -408,7 +408,7 @@ static void string(bool assignable) {
 
     escape_string(string->chars, &string->length);
 
-    emit_constant(OBJECT_CAST(string));
+    emit_constant(NEW_OBJECT(string));
 }
 
 static void clock(bool assignable) {

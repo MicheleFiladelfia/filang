@@ -13,7 +13,7 @@ char *type_to_string(Value value) {
         case TYPE_BOOL:
             return "<builtin 'bool'>";
         case TYPE_DECIMAL:
-            return "<builtin 'float'>";
+            return "<builtin 'decimal'>";
         case TYPE_INTEGER:
             return "<builtin 'integer'>";
         case TYPE_NIL:

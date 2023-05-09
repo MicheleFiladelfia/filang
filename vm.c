@@ -123,9 +123,9 @@ InterpretResult execute() {
             a = pop().as.integer;                                                                                                               \
                                                                                                                                                 \
             if (castBool)                                                                                                                       \
-                push(BOOL_CAST((a operator b)));                                                                                                \
+                push(NEW_BOOL((a operator b)));                                                                                                \
             else                                                                                                                                \
-                push(INTEGER_CAST(a operator b));                                                                                               \
+                push(NEW_INTEGER(a operator b));                                                                                               \
         }                                                                                                                                       \
         else {                                                                                                                                  \
             double b, a;                                                                                                                        \
@@ -145,9 +145,9 @@ InterpretResult execute() {
             }                                                                                                                                   \
                                                                                                                                                 \
             if (castBool)                                                                                                                       \
-                push(BOOL_CAST(a operator b));                                                                                                  \
+                push(NEW_BOOL(a operator b));                                                                                                  \
             else                                                                                                                                \
-                push(DECIMAL_CAST(a operator b));                                                                                               \
+                push(NEW_DECIMAL(a operator b));                                                                                               \
         }                                                                                                                                       \
     } while (false)
 
@@ -166,7 +166,7 @@ InterpretResult execute() {
         int64_t b = pop().as.integer;                                                                                                           \
         int64_t a = pop().as.integer;                                                                                                           \
                                                                                                                                                 \
-        push(INTEGER_CAST(a operator b));                                                                                                       \
+        push(NEW_INTEGER(a operator b));                                                                                                       \
     } while (false)
 
     Value temp;
@@ -187,17 +187,17 @@ InterpretResult execute() {
                 push(READ_CONSTANT_LONG_LONG());
                 break;
             case OP_TRUE:
-                push(BOOL_CAST(true));
+                push(NEW_BOOL(true));
                 break;
             case OP_FALSE:
-                push(BOOL_CAST(false));
+                push(NEW_BOOL(false));
                 break;
             case OP_NIL:
                 push(NIL);
                 break;
             case OP_ADD:
                 if (IS_STRING(peek(0)) || IS_STRING(peek(1))) {
-                    push(OBJECT_CAST(concatenate_strings(value_to_string(pop()), value_to_string(pop()))));
+                    push(NEW_OBJECT(concatenate_strings(value_to_string(pop()), value_to_string(pop()))));
                     break;
                 }
 
@@ -245,9 +245,9 @@ InterpretResult execute() {
                 double result = pow(a, b);
 
                 if (floor(result) == result) {
-                    push(INTEGER_CAST((int64_t) result));
+                    push(NEW_INTEGER((int64_t) result));
                 } else {
-                    push(DECIMAL_CAST(result));
+                    push(NEW_DECIMAL(result));
                 }
                 break;
             case OP_PRINT:
@@ -275,14 +275,14 @@ InterpretResult execute() {
                         switch (peek(1).type) {
                             case TYPE_BOOL:
                             case TYPE_INTEGER:
-                                push(BOOL_CAST(pop().as.integer == pop().as.integer));
+                                push(NEW_BOOL(pop().as.integer == pop().as.integer));
                                 break;
                             case TYPE_DECIMAL:
-                                push(BOOL_CAST(pop().as.integer == pop().as.decimal));
+                                push(NEW_BOOL(pop().as.integer == pop().as.decimal));
                                 break;
                             case TYPE_OBJECT:
                             case TYPE_NIL:
-                                push(BOOL_CAST(false));
+                                push(NEW_BOOL(false));
                                 break;
                         }
                         break;
@@ -290,59 +290,59 @@ InterpretResult execute() {
                         switch (peek(1).type) {
                             case TYPE_BOOL:
                             case TYPE_INTEGER:
-                                push(BOOL_CAST(pop().as.decimal == pop().as.integer));
+                                push(NEW_BOOL(pop().as.decimal == pop().as.integer));
                                 break;
                             case TYPE_DECIMAL:
-                                push(BOOL_CAST(pop().as.decimal == pop().as.decimal));
+                                push(NEW_BOOL(pop().as.decimal == pop().as.decimal));
                                 break;
                             case TYPE_OBJECT:
                             case TYPE_NIL:
-                                push(BOOL_CAST(false));
+                                push(NEW_BOOL(false));
                                 break;
                         }
                         break;
                     case TYPE_OBJECT:
                         if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
-                            push(BOOL_CAST(AS_STRING(peek(0)) == AS_STRING(peek(1))));
+                            push(NEW_BOOL(AS_STRING(peek(0)) == AS_STRING(peek(1))));
                         } else {
-                            push(BOOL_CAST(false));
+                            push(NEW_BOOL(false));
                         }
                         break;
                     case TYPE_NIL:
-                        push(BOOL_CAST(peek(1).type == TYPE_NIL));
+                        push(NEW_BOOL(peek(1).type == TYPE_NIL));
                         break;
                 }
                 break;
             case OP_AND:
                 if (!is_true(peek(1)) || !is_true(peek(0))) {
                     pop_n(2);
-                    push(BOOL_CAST(false));
+                    push(NEW_BOOL(false));
                 } else {
                     pop_n(2);
-                    push(BOOL_CAST(true));
+                    push(NEW_BOOL(true));
                 }
                 break;
             case OP_OR:
                 if (is_true(peek(1)) || is_true(peek(0))) {
                     pop_n(2);
-                    push(BOOL_CAST(true));
+                    push(NEW_BOOL(true));
                 } else {
                     pop_n(2);
-                    push(BOOL_CAST(false));
+                    push(NEW_BOOL(false));
                 }
                 break;
             case OP_NEGATE:
                 if (IS_INTEGER(peek(0))) {
-                    *peek_pointer(0) = INTEGER_CAST(-peek(0).as.integer);
+                    *peek_pointer(0) = NEW_INTEGER(-peek(0).as.integer);
                 } else if (IS_FLOAT(peek(0))) {
-                    *peek_pointer(0) = DECIMAL_CAST(-peek(0).as.decimal);
+                    *peek_pointer(0) = NEW_DECIMAL(-peek(0).as.decimal);
                 } else {
                     runtime_error("unsupported operand type for %s: %s.", "-", type_to_string(peek(0)));
                     return RUNTIME_ERROR;
                 }
                 break;
             case OP_NOT:
-                *peek_pointer(0) = BOOL_CAST(!is_true(peek(0)));
+                *peek_pointer(0) = NEW_BOOL(!is_true(peek(0)));
                 break;
             case OP_TERNARY:
                 if (is_true(peek(2))) {
@@ -370,7 +370,7 @@ InterpretResult execute() {
                     return RUNTIME_ERROR;
                 }
 
-                *peek_pointer(0) = INTEGER_CAST(~peek(0).as.integer);
+                *peek_pointer(0) = NEW_INTEGER(~peek(0).as.integer);
                 break;
             case OP_SHIFT_LEFT:
                 BINARY_INTEGER_OPERATION(<<, "<<");
@@ -423,11 +423,11 @@ InterpretResult execute() {
 
                 break;
             case OP_CLOCK:
-                push(DECIMAL_CAST((double) clock() / CLOCKS_PER_SEC));
+                push(NEW_DECIMAL((double) clock() / CLOCKS_PER_SEC));
                 break;
             case OP_TYPEOF:
                 cstr = type_to_string(pop());
-                push(OBJECT_CAST(make_objstring(cstr, strlen(cstr))));
+                push(NEW_OBJECT(make_objstring(cstr, strlen(cstr))));
                 break;
         }
     }
