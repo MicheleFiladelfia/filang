@@ -1,4 +1,6 @@
 #include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include "chunk.h"
 #include "memory.h"
 
@@ -26,6 +28,10 @@ void write_chunk(Chunk *chunk, uint8_t byte, int line) {
         int oldCapacity = chunk->capacity;
         chunk->capacity = GROW_ARRAY_CAPACITY(chunk->capacity);
         chunk->code = GROW_ARRAY(chunk->code, uint8_t, oldCapacity, chunk->capacity);
+        if (chunk->code == NULL) {
+            fprintf(stderr, "Failed to allocate memory\n");
+            exit(1);
+        }
     }
 
     chunk->code[chunk->count] = byte;
@@ -35,8 +41,12 @@ void write_chunk(Chunk *chunk, uint8_t byte, int line) {
             int oldCapacity = chunk->lines.capacity;
             chunk->lines.capacity = GROW_ARRAY_CAPACITY(chunk->lines.capacity);
             chunk->lines.ends = GROW_ARRAY(chunk->lines.ends, int, oldCapacity, chunk->lines.capacity);
+            if (chunk->lines.ends == NULL) {
+                fprintf(stderr, "Failed to allocate memory\n");
+                exit(1);
+            }
             memset(&chunk->lines.ends[oldCapacity], -1, sizeof(int) * (chunk->lines.capacity - oldCapacity));
-         }
+        }
          chunk->lines.count++;
     }
 
