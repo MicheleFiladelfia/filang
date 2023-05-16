@@ -7,12 +7,22 @@
 #include "scanner.h"
 #include "strings.h"
 
+#define MAX_SCOPE_DEPTH 512
+
 typedef struct {
     Token previous;
     Token current;
     bool has_error;
     bool panic_mode;
 } Parser;
+
+struct {
+    Token *variables;
+    size_t count;
+    size_t capacity;
+    size_t current_depth;
+    size_t locals_in_scope[MAX_SCOPE_DEPTH];
+} locals;
 
 Parser parser;
 Chunk *compile_chunk;
@@ -44,12 +54,57 @@ typedef struct {
     ParsePrec prec;
 } ParseRule;
 
+void init_compiler(Chunk *chunk) {
+    parser.has_error = false;
+    parser.panic_mode = false;
+    compile_chunk = chunk;
+    locals.count = 0;
+    locals.capacity = 0;
+    locals.variables = NULL;
+    locals.current_depth = 0;
+    memset(locals.locals_in_scope, 0, sizeof(int) * 255);
+}
+
+static size_t define_local(Token name, size_t depth) {
+    if (locals.count + 1 >= locals.capacity) {
+        size_t old_capacity = locals.capacity;
+        locals.capacity = GROW_ARRAY_CAPACITY(old_capacity);
+        locals.variables = GROW_ARRAY(locals.variables, Token, old_capacity, locals.capacity);
+
+        if (locals.variables == NULL) {
+            fprintf(stderr, "Failed to allocate memory for local variables\n");
+            exit(1);
+        }
+    }
+    locals.variables[locals.count] = name;
+    locals.locals_in_scope[depth]++;
+    return locals.count++;
+}
+
+static size_t get_local_index(Token name) {
+    for (int i = (int) locals.count - 1; i >= 0; i--) {
+        if (strncmp(name.start, locals.variables[i].start, name.length) == 0) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+static bool local_exists_in_cur_scope(Token local) {
+    for (size_t i = locals.count - locals.locals_in_scope[locals.current_depth]; i < locals.count; i++) {
+        if (strncmp(locals.variables[i].start, local.start, locals.variables[i].length) == 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
 
 static void compile_error(Token *token, const char *message) {
     if (parser.panic_mode) return;
     parser.panic_mode = true;
     parser.has_error = true;
-
 
     fprintf(stderr, "[line %d] CompileError", token->line);
 
@@ -119,6 +174,7 @@ static void skip_to_next_statement() {
         switch (parser.current.type) {
             case TOKEN_VAR:
             case TOKEN_PRINT:
+            case TOKEN_LEFT_BRACE:
                 return;
             default:
                 break;
@@ -182,10 +238,47 @@ static void print() {
     emit_byte(OP_PRINT);
 }
 
+static void end_scope() {
+    locals.count -= locals.locals_in_scope[locals.current_depth];
+    locals.locals_in_scope[locals.current_depth] = 0;
+    locals.current_depth--;
+}
+
+static void start_scope() {
+    locals.current_depth++;
+}
+
+static void definition();
+
+static void block() {
+    start_scope();
+
+    if (locals.current_depth >= MAX_SCOPE_DEPTH) {
+        error_at_current("too many nested blocks.");
+        exit(1);
+    }
+    while (true) {
+        if (match(TOKEN_RIGHT_BRACE)) {
+            break;
+        }
+
+        if (match(TOKEN_EOF)) {
+            error_at_current("Expected '}' at the end of block.");
+            break;
+        }
+
+        definition();
+    }
+
+    end_scope();
+}
+
 static void statement() {
     if (match(TOKEN_PRINT)) {
         print();
         consume(TOKEN_SEMICOLON, "expected ';' after print statement.");
+    } else if (match(TOKEN_LEFT_BRACE)) {
+        block();
     } else {
         expression();
         emit_byte(OP_POP);
@@ -193,10 +286,23 @@ static void statement() {
     }
 }
 
+static void emit_local(size_t idx) {
+    if (idx < 255) {
+        emit_bytes(2, OP_CONSTANT, idx);
+    } else if (idx < 65535) {
+        emit_bytes(3, OP_CONSTANT_LONG, idx & 0xFF, (idx >> 8) & 0xFF);
+    } else if (idx < 16777215) {
+        emit_bytes(4, OP_CONSTANT_LONG_LONG, idx & 0xFF, (idx >> 8) & 0xFF, (idx >> 16) & 0xFF);
+    } else {
+        error_at_previous("too many constants in one chunk.");
+        exit(1);
+    }
+}
+
 static void var_definition() {
     consume(TOKEN_IDENTIFIER, "expected identifier after variable definition.");
 
-    Value name = NEW_OBJECT(make_objstring(parser.previous.start, parser.previous.length));
+    Token prev = parser.previous;
 
     if (match(TOKEN_EQUAL)) {
         expression();
@@ -204,20 +310,45 @@ static void var_definition() {
         emit_byte(OP_NIL);
     }
 
-    emit_byte(OP_DEFINE_GLOBAL);
-    emit_constant(name);
+    if (locals.current_depth == 0) {
+        emit_byte(OP_DEFINE_GLOBAL);
+        emit_constant(NEW_OBJECT(make_objstring(prev.start, prev.length)));
+    } else {
+        if (local_exists_in_cur_scope(prev)) {
+            compile_error(&prev, "variable with this name already defined in this scope.");
+            exit(1);
+        }
+        emit_byte(OP_SET_LOCAL);
+        size_t local_idx = define_local(prev, locals.current_depth);
+        emit_local(local_idx);
+    }
+
 }
 
 static void identifier(bool assignable) {
     Value name = NEW_OBJECT(make_objstring(parser.previous.start, parser.previous.length));
+    Token prev = parser.previous;
 
     if (match(TOKEN_EQUAL) && assignable) {
         expression();
-        emit_byte(OP_SET_GLOBAL);
-        emit_constant(name);
+        size_t local_idx = get_local_index(prev);
+        if (local_idx != -1) {
+            emit_byte(OP_SET_LOCAL);
+            emit_local(local_idx);
+        } else {
+            emit_byte(OP_SET_GLOBAL);
+            emit_constant(name);
+        }
     } else {
-        emit_byte(OP_GET_GLOBAL);
-        emit_constant(name);
+        size_t local_idx = get_local_index(prev);
+        if (local_idx != -1) {
+            emit_byte(OP_GET_LOCAL);
+            emit_local(local_idx);
+        } else {
+            emit_byte(OP_GET_GLOBAL);
+            emit_constant(name);
+        }
+
     }
 }
 
@@ -491,10 +622,7 @@ static ParseRule *get_rule(TokenType type) {
 
 bool compile(Chunk *chunk, const char *source) {
     init_scanner(source);
-    compile_chunk = chunk;
-
-    parser.has_error = false;
-    parser.panic_mode = false;
+    init_compiler(chunk);
 
     advance();
     while (!match(TOKEN_EOF)) {

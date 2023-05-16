@@ -11,15 +11,19 @@ typedef enum {
     RUNTIME_ERROR
 } InterpretResult;
 
-
 typedef struct {
     bool repl;
     Chunk *chunk;
     uint8_t *ip;
     Value stack[256];
-    Value *stackTop;
+    Value *stack_top;
     Hashmap strings;
     Hashmap globals;
+    struct {
+        int size;
+        int capacity;
+        Value *local;
+    } locals;
 } VM;
 
 extern VM vm;

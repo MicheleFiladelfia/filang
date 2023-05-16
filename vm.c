@@ -3,47 +3,58 @@
 #include <stdarg.h>
 #include <string.h>
 #include <time.h>
+#include <malloc.h>
 #include "vm.h"
 #include "chunk.h"
 #include "compiler.h"
 #include "strings.h"
+#include "memory.h"
+
 
 VM vm;
 
 static void reset_stack() {
-    vm.stackTop = vm.stack;
+    vm.stack_top = vm.stack;
+}
+
+static void init_locals() {
+    vm.locals.size = 0;
+    vm.locals.capacity = 0;
+    vm.locals.local = NULL;
 }
 
 void init_vm() {
     reset_stack();
     init_hashmap(&vm.strings);
+    init_locals();
 }
 
 void free_vm() {
     free_hashmap(&vm.strings);
     free_hashmap(&vm.globals);
+    free(vm.locals.local);
 }
 
 static void push(Value value) {
-    *vm.stackTop = value;
-    vm.stackTop++;
+    *vm.stack_top = value;
+    vm.stack_top++;
 }
 
 static Value pop() {
-    vm.stackTop--;
-    return *vm.stackTop;
+    vm.stack_top--;
+    return *vm.stack_top;
 }
 
 static void pop_n(int n) {
-    vm.stackTop -= n;
+    vm.stack_top -= n;
 }
 
 static Value peek(int count) {
-    return vm.stackTop[-1 - count];
+    return vm.stack_top[-1 - count];
 }
 
 static Value *peek_pointer(int count) {
-    return vm.stackTop - 1 - count;
+    return vm.stack_top - 1 - count;
 }
 
 static bool is_true(Value value) {
@@ -86,29 +97,49 @@ static void runtime_error(const char *format, ...) {
     reset_stack();
 }
 
-InterpretResult execute() {
-#define READ_BYTE() (*(vm.ip++))
-#define NEXT_BYTE() (*(vm.ip))
-#define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
-#define READ_CONSTANT_LONG() (vm.chunk->constants.values[READ_BYTE() + (READ_BYTE()<<8)])
-#define READ_CONSTANT_LONG_LONG() (vm.chunk->constants.values[READ_BYTE() + (READ_BYTE()<<8) + (READ_BYTE()<<16)])
-#define READ_STRING_BYTE() AS_STRING(READ_CONSTANT())
-#define READ_STRING(str)                     \
-    switch (READ_BYTE()) {                   \
-    case OP_CONSTANT:                        \
-        str = READ_CONSTANT();               \
-        break;                               \
-    case OP_CONSTANT_LONG:                   \
-        str = READ_CONSTANT_LONG();          \
-        break;                               \
-    case OP_CONSTANT_LONG_LONG:              \
-        str = READ_CONSTANT_LONG_LONG();     \
-        break;                               \
-    default:                                 \
-        runtime_error("An error occurred."); \
-        return RUNTIME_ERROR;                \
+static void set_local(size_t slot, Value value) {
+    if (slot < vm.locals.size) {
+    } else if (slot < vm.locals.capacity) {
+        vm.locals.size++;
+    } else if (slot >= vm.locals.capacity) {
+        int old_capacity = vm.locals.capacity;
+        vm.locals.capacity = GROW_ARRAY_CAPACITY(old_capacity);
+        vm.locals.local = GROW_ARRAY(vm.locals.local, Value, old_capacity, vm.locals.capacity);
+
+        if (vm.locals.local == NULL) {
+            runtime_error("An error occurred.");
+            return;
+        }
     }
 
+    vm.locals.local[slot] = value;
+}
+
+#define READ_LOCAL(index) (vm.locals.local[index])
+
+#define READ_BYTE() (*(vm.ip++))
+#define NEXT_BYTE() (*(vm.ip))
+#define READ_CONSTANT_INDEX() (READ_BYTE())
+#define READ_CONSTANT_LONG_INDEX() (READ_BYTE() + (READ_BYTE()<<8))
+#define READ_CONSTANT_LONG_LONG_INDEX() (READ_BYTE() + (READ_BYTE()<<8) + (READ_BYTE()<<16))
+#define READ_CONSTANT(index) (vm.chunk->constants.values[index])
+
+static size_t read_generic_constant_index() {
+    switch (READ_BYTE()) {
+        case OP_CONSTANT:
+            return READ_CONSTANT_INDEX();
+        case OP_CONSTANT_LONG:
+            return READ_CONSTANT_LONG_INDEX();
+        case OP_CONSTANT_LONG_LONG:
+            return READ_CONSTANT_LONG_LONG_INDEX();
+        default:
+            runtime_error("An error occurred.");
+            return 0;
+    }
+}
+
+
+InterpretResult execute() {
 #define BINARY_NUMBER_OPERATION(castBool, operator, string_operator)                                                                            \
     do {                                                                                                                                        \
         if (!IS_NUMERIC(peek(0)) || !IS_NUMERIC(peek(1))) {                                                                                     \
@@ -171,6 +202,7 @@ InterpretResult execute() {
 
     Value temp;
     Entry *entry;
+    size_t index;
     char *cstr;
 
     for (;;) {
@@ -178,13 +210,13 @@ InterpretResult execute() {
             case OP_RETURN:
                 return NO_ERRORS;
             case OP_CONSTANT:
-                push(READ_CONSTANT());
+                push(READ_CONSTANT(READ_CONSTANT_INDEX()));
                 break;
             case OP_CONSTANT_LONG:
-                push(READ_CONSTANT_LONG());
+                push(READ_CONSTANT(READ_CONSTANT_LONG_INDEX()));
                 break;
             case OP_CONSTANT_LONG_LONG:
-                push(READ_CONSTANT_LONG_LONG());
+                push(READ_CONSTANT(READ_CONSTANT_LONG_LONG_INDEX()));
                 break;
             case OP_TRUE:
                 push(NEW_BOOL(true));
@@ -208,7 +240,7 @@ InterpretResult execute() {
                 break;
             case OP_DIVIDE:
                 if ((IS_INTEGER(peek(0)) && peek(0).as.integer == 0) ||
-                    (IS_FLOAT(peek(0)) && peek(0).as.decimal == 0.0)) {
+                        (IS_FLOAT(peek(0)) && peek(0).as.decimal == 0.0)) {
                     runtime_error("division by zero.");
                     return RUNTIME_ERROR;
                 }
@@ -387,16 +419,18 @@ InterpretResult execute() {
                 }
                 break;
             case OP_DEFINE_GLOBAL:
-                READ_STRING(temp);
+                index = read_generic_constant_index();
+                temp = READ_CONSTANT(index);
 
                 if (add_entry(&vm.globals, temp, pop())) {
-                    runtime_error("redefinition of variable '%s'.", AS_STRING(temp)->chars);
+                    runtime_error("redefinition of global variable '%s'.", AS_STRING(temp)->chars);
                     return RUNTIME_ERROR;
                 }
 
                 break;
             case OP_GET_GLOBAL:
-                READ_STRING(temp);
+                index = read_generic_constant_index();
+                temp = READ_CONSTANT(index);
 
                 entry = get_entry(&vm.globals, temp);
 
@@ -409,7 +443,8 @@ InterpretResult execute() {
 
                 break;
             case OP_SET_GLOBAL:
-                READ_STRING(temp);
+                index = read_generic_constant_index();
+                temp = READ_CONSTANT(index);
 
                 entry = get_entry(&vm.globals, temp);
 
@@ -422,6 +457,14 @@ InterpretResult execute() {
                 }
 
                 break;
+            case OP_GET_LOCAL:
+                index = read_generic_constant_index();
+                push(READ_LOCAL(index));
+                break;
+            case OP_SET_LOCAL:
+                index = read_generic_constant_index();
+                set_local(index, peek(0));
+                break;
             case OP_CLOCK:
                 push(NEW_DECIMAL((double) clock() / CLOCKS_PER_SEC));
                 break;
@@ -431,15 +474,8 @@ InterpretResult execute() {
                 break;
         }
     }
-#undef READ_BYTE
-#undef READ_CONSTANT
-#undef READ_CONSTANT_LONG
-#undef READ_CONSTANT_LONG_LONG
-#undef READ_STRING_BYTE
-#undef READ_STRING
-#undef NEXT_BYTE
+
 #undef BINARY_NUMBER_OPERATION
-#undef BINARY_NUMBER_FUNCTION
 #undef BINARY_INTEGER_OPERATION
 }
 
