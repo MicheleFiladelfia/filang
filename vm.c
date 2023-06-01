@@ -288,16 +288,18 @@ InterpretResult execute() {
                 break;
             case OP_GREATER:
                 if (NEXT_BYTE() == OP_NOT) {
-                    BINARY_NUMBER_OPERATION(true, >, "<=");
+                    BINARY_NUMBER_OPERATION(true, <=, "<=");
+                    READ_BYTE();
                 } else {
                     BINARY_NUMBER_OPERATION(true, >, ">");
                 }
                 break;
             case OP_LESS:
                 if (NEXT_BYTE() == OP_NOT) {
-                    BINARY_NUMBER_OPERATION(true, >, "<=");
+                    BINARY_NUMBER_OPERATION(true, >=, ">=");
+                    READ_BYTE();
                 } else {
-                    BINARY_NUMBER_OPERATION(true, >, ">");
+                    BINARY_NUMBER_OPERATION(true, <, "<");
                 }
                 break;
             case OP_EQUALS:
