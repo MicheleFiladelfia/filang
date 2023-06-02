@@ -123,6 +123,7 @@ static void set_local(size_t slot, Value value) {
 #define READ_CONSTANT_LONG_INDEX() (READ_BYTE() + (READ_BYTE()<<8))
 #define READ_CONSTANT_LONG_LONG_INDEX() (READ_BYTE() + (READ_BYTE()<<8) + (READ_BYTE()<<16))
 #define READ_CONSTANT(index) (vm.chunk->constants.values[index])
+#define HAS_DECIMAL_DIGITS(val) !(floor(val) == val)
 
 static size_t read_generic_constant_index() {
     switch (READ_BYTE()) {
@@ -147,63 +148,34 @@ InterpretResult execute() {
             return RUNTIME_ERROR;                                                                                                               \
         }                                                                                                                                       \
                                                                                                                                                 \
-        if (!IS_FLOAT(peek(0)) && !IS_FLOAT(peek(1)) && strcmp(string_operator, "/") != 0) {                                                    \
-            int64_t b, a;                                                                                                                       \
-                                                                                                                                                \
-            b = pop().as.integer;                                                                                                               \
-            a = pop().as.integer;                                                                                                               \
-                                                                                                                                                \
-            if (castBool)                                                                                                                       \
-                push(NEW_BOOL((a operator b)));                                                                                                \
-            else                                                                                                                                \
-                push(NEW_INTEGER(a operator b));                                                                                               \
+        if (!IS_FLOAT(peek(0)) && !IS_FLOAT(peek(1)) && string_operator[0] != '/') {                                                            \
+            resi = pop().as.integer;                                                                                                            \
+            resi = pop().as.integer operator resi;                                                                                              \
+            push(castBool ? NEW_BOOL(resi) : NEW_INTEGER(resi));                                                                                \
+        } else {                                                                                                                                \
+            resd = IS_INTEGER(peek(0)) ? (double)pop().as.integer : pop().as.decimal;                                                           \
+            resd = (IS_INTEGER(peek(0)) ? (double)pop().as.integer : pop().as.decimal) operator resd;                                           \
+            push(castBool ? NEW_BOOL(resd) : NEW_DECIMAL(resd));                                                                                \
         }                                                                                                                                       \
-        else {                                                                                                                                  \
-            double b, a;                                                                                                                        \
-                                                                                                                                                \
-            if (IS_INTEGER(peek(0))) {                                                                                                          \
-                b = (double)pop().as.integer;                                                                                                   \
-            }                                                                                                                                   \
-            else {                                                                                                                              \
-                b = pop().as.decimal;                                                                                                           \
-            }                                                                                                                                   \
-                                                                                                                                                \
-            if (IS_INTEGER(peek(0))) {                                                                                                          \
-                a = (double)pop().as.integer;                                                                                                   \
-            }                                                                                                                                   \
-            else {                                                                                                                              \
-                a = pop().as.decimal;                                                                                                           \
-            }                                                                                                                                   \
-                                                                                                                                                \
-            if (castBool)                                                                                                                       \
-                push(NEW_BOOL(a operator b));                                                                                                  \
-            else                                                                                                                                \
-                push(NEW_DECIMAL(a operator b));                                                                                               \
-        }                                                                                                                                       \
-    } while (false)
+}while (false)
 
 #define BINARY_INTEGER_OPERATION(operator, string_operator)                                                                                     \
     do {                                                                                                                                        \
-        if ((!IS_BOOL(peek(0)) && !IS_INTEGER(peek(0))) || (!IS_BOOL(peek(1)) && !IS_INTEGER(peek(1)))) {                                       \
+        if ((!IS_INTEGER(peek(0))) || (!IS_INTEGER(peek(1)))) {                                                                                 \
             runtime_error("unsupported operand type(s) for %s: %s and %s.", string_operator, type_to_string(peek(1)), type_to_string(peek(0))); \
             return RUNTIME_ERROR;                                                                                                               \
         }                                                                                                                                       \
                                                                                                                                                 \
-        if (strcmp(string_operator, "%") == 0 && peek(0).as.integer == 0) {                                                                     \
-            runtime_error("division by zero.");                                                                                                 \
-            return RUNTIME_ERROR;                                                                                                               \
-        }                                                                                                                                       \
-                                                                                                                                                \
-        int64_t b = pop().as.integer;                                                                                                           \
-        int64_t a = pop().as.integer;                                                                                                           \
-                                                                                                                                                \
-        push(NEW_INTEGER(a operator b));                                                                                                       \
-    } while (false)
+        resi = pop().as.integer;                                                                                                                \
+        push(NEW_INTEGER(pop().as.integer operator resi));                                                                                      \
+}while (false)
 
     Value temp;
     Entry *entry;
     size_t index;
     char *cstr;
+    double resd;
+    int64_t resi;
 
     for (;;) {
         switch (READ_BYTE()) {
@@ -251,6 +223,11 @@ InterpretResult execute() {
                 BINARY_NUMBER_OPERATION(false, *, "*");
                 break;
             case OP_MODULO:
+                if(IS_INTEGER(peek(0)) && peek(0).as.integer == 0) {
+                    runtime_error("division by zero.");
+                    return RUNTIME_ERROR;
+                }
+
                 BINARY_INTEGER_OPERATION(%, "%");
                 break;
             case OP_POW:
@@ -260,27 +237,10 @@ InterpretResult execute() {
                     return RUNTIME_ERROR;
                 }
 
-                double b, a;
+                resd = IS_INTEGER(peek(0)) ? (double) pop().as.integer : pop().as.decimal;
+                resd = pow((IS_INTEGER(peek(0)) ? (double) pop().as.integer : pop().as.decimal),resd);
 
-                if (IS_INTEGER(peek(0))) {
-                    b = (double) pop().as.integer;
-                } else {
-                    b = pop().as.decimal;
-                }
-
-                if (IS_INTEGER(peek(0))) {
-                    a = (double) pop().as.integer;
-                } else {
-                    a = pop().as.decimal;
-                }
-
-                double result = pow(a, b);
-
-                if (floor(result) == result) {
-                    push(NEW_INTEGER((int64_t) result));
-                } else {
-                    push(NEW_DECIMAL(result));
-                }
+                push(HAS_DECIMAL_DIGITS(resd) ? NEW_DECIMAL(resd) : NEW_INTEGER((int64_t) resd));
                 break;
             case OP_PRINT:
                 print_value(pop());
