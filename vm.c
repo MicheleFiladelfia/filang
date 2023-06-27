@@ -297,7 +297,7 @@ InterpretResult execute() {
                         break;
                     case TYPE_OBJECT:
                         if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
-                            push(NEW_BOOL(AS_STRING(peek(0)) == AS_STRING(peek(1))));
+                            push(NEW_BOOL(AS_STRING(pop()) == AS_STRING(pop())));
                         } else {
                             push(NEW_BOOL(false));
                         }
@@ -448,8 +448,8 @@ InterpretResult execute() {
                 runtime_error("Undefined error occurred during execution.");
                 return RUNTIME_ERROR;
         }
-    }
 
+    }
 #undef BINARY_NUMBER_OPERATION
 #undef BINARY_INTEGER_OPERATION
 }
