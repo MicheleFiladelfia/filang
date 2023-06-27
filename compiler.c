@@ -299,11 +299,15 @@ static void if_statement() {
     consume(TOKEN_RIGHT_PAREN, "expected ')' after condition.");
 
     int jump_then_index = emit_jump(OP_JUMP_IF_FALSE);
+    emit_byte(OP_POP);
+
     statement();
 
     int jump_end_else_index = emit_jump(OP_JUMP);
 
     fix_jump_index(jump_then_index);
+
+    emit_byte(OP_POP);
 
     if (match(TOKEN_ELSE)) {
         statement();
