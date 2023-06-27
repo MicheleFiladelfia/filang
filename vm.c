@@ -434,6 +434,19 @@ InterpretResult execute() {
                 cstr = type_to_string(pop());
                 push(NEW_OBJECT(make_objstring(cstr, strlen(cstr))));
                 break;
+            case OP_JUMP_IF_FALSE:
+                index = READ_CONSTANT_LONG_INDEX();
+                if (!is_true(peek(0))) {
+                    vm.ip += index;
+                }
+                break;
+            case OP_JUMP:
+                index = READ_CONSTANT_LONG_INDEX();
+                vm.ip += index;
+                break;
+            case OP_ERROR:
+                runtime_error("Undefined error occurred during execution.");
+                return RUNTIME_ERROR;
         }
     }
 

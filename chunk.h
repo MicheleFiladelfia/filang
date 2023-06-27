@@ -7,6 +7,7 @@
 
 
 typedef enum {
+    OP_ERROR,
     OP_RETURN,
     OP_ADD,
     OP_SUBTRACT,
@@ -43,6 +44,8 @@ typedef enum {
     OP_SET_LOCAL,
     OP_CLOCK,
     OP_TYPEOF,
+    OP_JUMP,
+    OP_JUMP_IF_FALSE,
 } OpCode;
 
 typedef struct {

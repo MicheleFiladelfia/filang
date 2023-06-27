@@ -115,6 +115,17 @@ void disassemble(Chunk *chunk) {
             case OP_TERNARY:
                 printf("OP_TERNARY\n");
                 break;
+            case OP_ERROR:
+                printf("OP_ERROR\n");
+                break;
+            case OP_JUMP:
+                printf("OP_JUMP\n");
+                i += 2;
+                break;
+            case OP_JUMP_IF_FALSE:
+                printf("OP_JUMP_IF_FALSE\n");
+                i += 2;
+                break;
             default:
                 printf("Unknown opcode %d\n", chunk->code[i]);
         }

@@ -273,12 +273,53 @@ static void block() {
     end_scope();
 }
 
+static int emit_jump(uint8_t jump) {
+    emit_byte(jump);
+    emit_bytes(2, OP_ERROR, OP_ERROR); // placeholder for jump offset
+    return compile_chunk->count - 2;
+}
+
+static void fix_jump_index(int jump_index) {
+    int offset = compile_chunk->count - jump_index - 2;
+
+    if (offset > 65535) {
+        error_at_current("jump then_offset too large.");
+        exit(1);
+    }
+
+    compile_chunk->code[jump_index] = offset & 0xFF;
+    compile_chunk->code[jump_index + 1] = (offset >> 8) & 0xFF;
+}
+
+static void statement();
+
+static void if_statement() {
+    consume(TOKEN_LEFT_PAREN, "expected '(' after 'if'.");
+    expression();
+    consume(TOKEN_RIGHT_PAREN, "expected ')' after condition.");
+
+    int jump_then_index = emit_jump(OP_JUMP_IF_FALSE);
+    statement();
+
+    int jump_end_else_index = emit_jump(OP_JUMP);
+
+    fix_jump_index(jump_then_index);
+
+    if (match(TOKEN_ELSE)) {
+        statement();
+    }
+
+    fix_jump_index(jump_end_else_index);
+}
+
 static void statement() {
     if (match(TOKEN_PRINT)) {
         print();
         consume(TOKEN_SEMICOLON, "expected ';' after print statement.");
     } else if (match(TOKEN_LEFT_BRACE)) {
         block();
+    } else if (match(TOKEN_IF)) {
+        if_statement();
     } else {
         expression();
         emit_byte(OP_POP);
