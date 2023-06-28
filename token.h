@@ -39,7 +39,7 @@ typedef enum {
     TOKEN_IF, TOKEN_ELSE,
 
     //declarations
-    TOKEN_FN, TOKEN_VAR,
+    TOKEN_FN,
 
     //constants
     TOKEN_EOF, TOKEN_TRUE, TOKEN_FALSE, TOKEN_NIL,

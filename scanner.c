@@ -121,11 +121,7 @@ static Token identifier() {
             if (check_keyword("eturn")) return make_token(TOKEN_RETURN);
             break;
         case 'f':
-            if (check_keyword("n")) return make_token(TOKEN_FN);
             if (check_keyword("alse")) return make_token(TOKEN_FALSE);
-            break;
-        case 'v':
-            if (check_keyword("ar")) return make_token(TOKEN_VAR);
             break;
         case 't':
             if (check_keyword("rue")) return make_token(TOKEN_TRUE);

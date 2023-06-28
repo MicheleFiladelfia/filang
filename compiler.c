@@ -172,7 +172,7 @@ static void skip_to_next_statement() {
             return;
 
         switch (parser.current.type) {
-            case TOKEN_VAR:
+            case TOKEN_COLONS:
             case TOKEN_PRINT:
             case TOKEN_LEFT_BRACE:
                 return;
@@ -301,7 +301,12 @@ static void if_statement() {
     int jump_then_index = emit_jump(OP_JUMP_IF_FALSE);
     emit_byte(OP_POP);
 
-    statement();
+    if (!match(TOKEN_LEFT_BRACE)) {
+        error_at_current("expected '{' after condition.");
+        exit(1);
+    }
+
+    block();
 
     int jump_end_else_index = emit_jump(OP_JUMP);
 
@@ -309,8 +314,12 @@ static void if_statement() {
 
     emit_byte(OP_POP);
 
-    if (match(TOKEN_ELSE)) {
-        statement();
+    if (match(TOKEN_COLONS)) {
+        if (!match(TOKEN_LEFT_BRACE)) {
+            error_at_current("expected '{' after ':'.");
+            exit(1);
+        }
+        block();
     }
 
     fix_jump_index(jump_end_else_index);
@@ -322,7 +331,7 @@ static void statement() {
         consume(TOKEN_SEMICOLON, "expected ';' after print statement.");
     } else if (match(TOKEN_LEFT_BRACE)) {
         block();
-    } else if (match(TOKEN_IF)) {
+    } else if (match(TOKEN_INTERROGATION)) {
         if_statement();
     } else {
         expression();
@@ -398,7 +407,7 @@ static void identifier(bool assignable) {
 }
 
 static void definition() {
-    if (match(TOKEN_VAR)) {
+    if (match(TOKEN_COLONS)) {
         var_definition();
         consume(TOKEN_SEMICOLON, "expected ';' after variable declaration.");
     } else {
@@ -648,8 +657,6 @@ ParseRule parse_rules[] = {
         [TOKEN_RETURN]      =   {NULL, NULL, PREC_NONE},
         [TOKEN_IF]          =   {NULL, NULL, PREC_NONE},
         [TOKEN_ELSE]        =   {NULL, NULL, PREC_NONE},
-        [TOKEN_FN]          =   {NULL, NULL, PREC_NONE},
-        [TOKEN_VAR]         =   {NULL, NULL, PREC_NONE},
         [TOKEN_EOF]         =   {NULL, NULL, PREC_NONE},
         [TOKEN_TRUE]        =   {boolean, NULL, PREC_NONE},
         [TOKEN_FALSE]       =   {boolean, NULL, PREC_NONE},
