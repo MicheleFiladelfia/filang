@@ -34,7 +34,7 @@ void print_value(Value value) {
             printf("%.15g", value.as.decimal);
             break;
         case TYPE_INTEGER:
-            printf("%ld", value.as.integer);
+            printf("%lld", (long long) value.as.integer);
             break;
         case TYPE_NIL:
             printf("nil");

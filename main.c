@@ -33,7 +33,8 @@ static char *read_from_file(char *file_path) {
     return buffer;
 }
 
-static void signal_handler(int) {
+static void signal_handler(int sig) {
+    (void) sig;
     printf("\nCaught Ctrl+C, terminated.");
     exit(0);
 }

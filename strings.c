@@ -6,7 +6,7 @@
 #include "hashmap.h"
 #include "vm.h"
 #include <string.h>
-#include <malloc.h>
+#include <stdlib.h>
 
 char *type_to_string(Value value) {
     switch (value.type) {
@@ -30,7 +30,7 @@ char *type_to_string(Value value) {
 
 static char *long_to_string(int64_t value) {
     char *buffer = ALLOCATE(char, 22);
-    snprintf(buffer, 22, "%ld", value);
+    snprintf(buffer, 22, "%lld", (long long) value);
     return buffer;
 }
 

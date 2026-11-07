@@ -3,7 +3,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <time.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include "vm.h"
 #include "chunk.h"
 #include "compiler.h"
@@ -201,7 +201,9 @@ InterpretResult execute() {
                 break;
             case OP_ADD:
                 if (IS_STRING(peek(0)) || IS_STRING(peek(1))) {
-                    push(NEW_OBJECT(concatenate_strings(value_to_string(pop()), value_to_string(pop()))));
+                    Value b = pop();
+                    Value a = pop();
+                    push(NEW_OBJECT(concatenate_strings(value_to_string(a), value_to_string(b))));
                     break;
                 }
 

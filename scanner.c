@@ -1,6 +1,6 @@
 #include <string.h>
 #include <stdbool.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include "scanner.h"
 #include "token.h"
